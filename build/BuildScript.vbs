@@ -16,7 +16,7 @@ Option Explicit
 Const app_Title = "VBA Scripting"
 Const app_Version = "0.2.0"
 Const app_Publisher = "RadiusCore Ltd"
-Const app_Ext = ".xlsm"
+Const app_Ext = ".xlam"
 
 ' Repo folder locations.
 Const rc_SrcFolder = "..\src\"
@@ -153,7 +153,7 @@ Private Function main_Build()
 	End If
 	
 	' Register compiled file with Excel.
-	'build_Register
+	build_Register
 	If Not Err.Number = 0 Then
 		PrintLn vbNullString: LogLn "ERROR Failed to register compiled file with Excel (" & Err.Number & ": " & Err.Description & "). Exiting BuildScript...", "Main.Build", True
 		vb_ExitCode = Err.Number
@@ -550,27 +550,39 @@ Sub build_Register()
 		Exit Sub
 	Case "Y"
 		Dim reg_Item
+		Dim reg_TargetKey
 		' Determine if file is already registered.
 		For Each reg_Item In Split(",1,2,3,4,5,6,7,8,9,10",",")
 			If registry_KeyExists(rc_reg_Excel & reg_Item) Then
-				If rc_FileSystem.GetFileName(Replace(registry_ReadValue(rc_reg_Excel & reg_Item),"""",vbNullString)) = "VBA Git.xlam" Then
-					PrintLn vbNullString: LogLn "Compiled file is already registered with Excel.", "Build.Register", True
-					Exit Sub
+				If rc_FileSystem.GetFileName(Replace(registry_ReadValue(rc_reg_Excel & reg_Item),"""",vbNullString)) = app_Title & app_Ext Then
+					If Replace(registry_ReadValue(rc_reg_Excel & reg_Item),"""",vbNullString) = FullPath(rc_RepoRootFolder & app_Title & app_Ext) Then
+						PrintLn vbNullString: LogLn "Compiled file is already registered with Excel.", "Build.Register", True
+						Exit Sub
+					Else
+						' Addin is registered, but not to the correct location. Save key for use later.
+						reg_TargetKey = rc_reg_Excel & reg_Item
+						Exit For
+					End If
 				End If
 			End If
-		Next 
+		Next
 		
-		' Register.
-		For Each reg_Item In Split(",1,2,3,4,5,6,7,8,9,10",",")
-			If Not registry_KeyExists(rc_reg_Excel & reg_Item) Then
-				If registry_WriteValue(rc_reg_Excel & reg_Item, """" &  FullPath(rc_RepoRootFolder & app_Title & app_Ext) & """", "REG_SZ") Then
-					PrintLn vbNullString: LogLn "Sucessfully registered compiled file with Excel.", "Build.Register", True
-				Else
-					PrintLn vbNullString: LogLn "Failed to register compiled file. You will need to manually do so via Excel.", "Build.Register", True
+		' If no TargetKey, find the first available key to register with.
+		If reg_TargetKey = vbNullString Then
+			For Each reg_Item In Split(",1,2,3,4,5,6,7,8,9,10",",")
+				If Not registry_KeyExists(rc_reg_Excel & reg_Item) Then
+					reg_TargetKey = rc_reg_Excel & reg_Item
+					Exit For
 				End If
-				Exit For
-			End If
-		Next 
+			Next
+		End If
+		
+		' Register addon to target key.
+		If registry_WriteValue(rc_reg_Excel & reg_Item, """" &  FullPath(rc_RepoRootFolder & app_Title & app_Ext) & """", "REG_SZ") Then
+			PrintLn vbNullString: LogLn "Sucessfully registered compiled file with Excel.", "Build.Register", True
+		Else
+			PrintLn vbNullString: LogLn "Failed to register compiled file. You will need to manually do so via Excel.", "Build.Register", True
+		End If
 	Case Else
 		PrintLn vbNullString: LogLn "ERROR Unrecognized action. Registration skipped.", "Build.Register", True
 		Exit Sub
