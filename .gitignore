@@ -1,0 +1,11 @@
+*.xla
+*.xlam
+*.xls
+*.xlsb
+*.xlsm
+*.xlsx
+*.xlt
+*.xltm
+*.xltx
+build/backup/
+build/BuildScript.log
