@@ -22,7 +22,7 @@ Attribute VB_Exposed = False
 ' RubberDuck Annotations
 ' https://rubberduckvba.com/ | https://github.com/rubberduck-vba/Rubberduck/
 '
-'@folder Ref.Scripting
+'@folder Scripting
 '@ignoremodule ProcedureNotUsed
 '' ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ '
 Option Explicit

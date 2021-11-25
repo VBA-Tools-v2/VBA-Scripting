@@ -23,7 +23,7 @@ Attribute VB_Description = "Drop-in replacement for Scripting.Dictionary on Mac"
 ' RubberDuck Annotations
 ' https://rubberduckvba.com/ | https://github.com/rubberduck-vba/Rubberduck/
 '
-'@folder Ref.Scripting
+'@folder Scripting
 '@moduledescription "Drop-in replacement for Scripting.Dictionary on Mac"
 '@ignoremodule
 '' ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ '
