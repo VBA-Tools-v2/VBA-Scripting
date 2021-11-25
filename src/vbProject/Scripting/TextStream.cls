@@ -27,8 +27,12 @@ Attribute VB_Exposed = False
 '' ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ '
 Option Explicit
 
+#If Not Mac And Not UseScriptingTextStreamIfAvailable Then
+
 Private Declare PtrSafe Sub ByteCopyMemory Lib "kernel32" Alias "RtlMoveMemory" _
     (Dest As Any, Source As Any, ByVal Count As Long)
+
+#End If
 
 ' --------------------------------------------- '
 ' Constants and Private Variables
