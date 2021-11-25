@@ -14,9 +14,20 @@ Option Private Module
 ' Constants and Private Variables
 ' --------------------------------------------- '
 
+Private Type TResult
+    Expected As Variant
+    Actual As Variant
+End Type
+
 Private Type TTest
     Assert As Object
     Fakes As Object
+    ScrFileSystem As Object
+    VbaFileSystem As FileSystemObject
+    unicode_ScrFilePath As String
+    unicode_VbaFilePath As String
+    ascii_ScrFilePath As String
+    ascii_VbaFilePath As String
 End Type
 
 Private This As TTest
@@ -25,184 +36,295 @@ Private This As TTest
 ' Test Methods
 ' ============================================= '
 
-' TODO - Convert this code to actual tests, not the sudo-tests they currently are.
-Private Sub Testspeedactual()
-    Dim scr_FilePath As String
-    Dim vba_FilePath As String
-    Dim test_Long As Long
-    Dim scr_FSO As Object
-    Dim scr_TextStream As Object
-    Dim vba_FSO As FileSystemObject
-    Dim vba_TextStream As TextStream
-    Dim test_Unicode As Boolean
-    Dim test_String As String
-    
-    scr_FilePath = "C:\Users\AndrewPullon\Documents\repos\RadiusCore\radius-excel\scr.txt"
-    vba_FilePath = "C:\Users\AndrewPullon\Documents\repos\RadiusCore\radius-excel\vba.txt"
-    Set scr_FSO = CreateObject("Scripting.FileSystemObject")
-    Set vba_FSO = New FileSystemObject
-    
-    test_Unicode = False
-    
-    Set scr_TextStream = scr_FSO.CreateTextFile(scr_FilePath, True, test_Unicode)
-    Set vba_TextStream = vba_FSO.CreateTextFile(vba_FilePath, True, test_Unicode)
-    
-    Debug.Print "Scripting START: " & VBA.Format$(VBA.Now, "yyyy-mm-dd hh:mm:ss") & "." & VBA.Right$(VBA.Format$(VBA.Timer, "#0.00"), 2)
-    'For test_Long = 1 To 20000
-    '    scr_TextStream.WriteLine "Hello World"
-    'Next test_Long
-    scr_TextStream.WriteBlankLines 20000
-    scr_TextStream.Close
-    Debug.Print "Scripting   END: " & VBA.Format$(VBA.Now, "yyyy-mm-dd hh:mm:ss") & "." & VBA.Right$(VBA.Format$(VBA.Timer, "#0.00"), 2)
-    
-    Debug.Print "VBA       START: " & VBA.Format$(VBA.Now, "yyyy-mm-dd hh:mm:ss") & "." & VBA.Right$(VBA.Format$(VBA.Timer, "#0.00"), 2)
-    'For test_Long = 1 To 20000
-    '    vba_TextStream.WriteLine "Hello World"
-    'Next test_Long
-    vba_TextStream.WriteBlankLines 20000
-    vba_TextStream.CloseFile
-    Debug.Print "VBA         END: " & VBA.Format$(VBA.Now, "yyyy-mm-dd hh:mm:ss") & "." & VBA.Right$(VBA.Format$(VBA.Timer, "#0.00"), 2)
-    
-    Debug.Print "Scripting START: " & VBA.Format$(VBA.Now, "yyyy-mm-dd hh:mm:ss") & "." & VBA.Right$(VBA.Format$(VBA.Timer, "#0.00"), 2)
-        Set scr_TextStream = scr_FSO.OpenTextFile(scr_FilePath, ForReading, False, VBA.IIf(test_Unicode, TristateTrue, TristateFalse))
-        test_String = scr_TextStream.ReadAll
-    Debug.Print "Scripting   END: " & VBA.Format$(VBA.Now, "yyyy-mm-dd hh:mm:ss") & "." & VBA.Right$(VBA.Format$(VBA.Timer, "#0.00"), 2)
-    Debug.Print "VBA       START: " & VBA.Format$(VBA.Now, "yyyy-mm-dd hh:mm:ss") & "." & VBA.Right$(VBA.Format$(VBA.Timer, "#0.00"), 2)
-        Set vba_TextStream = vba_FSO.OpenTextFile(vba_FilePath, ForReading, False, VBA.IIf(test_Unicode, TristateTrue, TristateFalse))
-        test_String = vba_TextStream.ReadAll
-    Debug.Print "VBA         END: " & VBA.Format$(VBA.Now, "yyyy-mm-dd hh:mm:ss") & "." & VBA.Right$(VBA.Format$(VBA.Timer, "#0.00"), 2)
+''
+' Test that VBA TextStream writes the same bytes as Scripting TextStream when using Unicode (TristateTrue) format.
+'
+'@testmethod Scripting.TextStream
+''
+Private Sub unicode_Write()
+'---ARRANGE---
+    Dim test_Result As TResult
+'---ACT---
+    test_Result = private_Write(TristateTrue)
+'---ASSERT---
+    This.Assert.AreEqual test_Result.Expected, test_Result.Actual, "File contents do not match when writing Unicode bytes to file."
 End Sub
 
-Private Sub testspeed()
-    Dim scr_FilePath As String
-    Dim vba_FilePath As String
-    Dim scr_FSO As Object
-    Dim scr_TextStream As Object
-    Dim vba_FSO As FileSystemObject
-    Dim vba_TextStream As TextStream
-    Dim vba_Str As String
-    Dim scr_Str As String
-    Dim test_Long As Long
-    Dim test_Item As Variant
-    Dim test_Unicode As Boolean
-    Dim test_Loop As Boolean
+
+''
+' Test that VBA TextStream writes the same bytes as Scripting TextStream when using ASCII (TristateFalse) format.
+'
+'@testmethod Scripting.TextStream
+''
+Private Sub ascii_Write()
+'---ARRANGE---
+    Dim test_Result As TResult
+'---ACT---
+    test_Result = private_Write(TristateFalse)
+'---ASSERT---
+    This.Assert.AreEqual test_Result.Expected, test_Result.Actual, "File contents do not match when writing ASCII bytes to file."
+End Sub
+
+''
+' Test that VBA TextStream appends the same bytes as Scripting TextStream when using Unicode(TristateTrue) format.
+'
+'@testmethod Scripting.TextStream
+''
+Private Sub unicode_Append()
+'---ARRANGE---
+    Dim test_Result As TResult
+'---ACT---
+    test_Result = private_Append(TristateTrue)
+'---ASSERT---
+    This.Assert.AreEqual test_Result.Expected, test_Result.Actual, "File contents do not match when appending Unicode bytes to file." & vbNewLine & _
+                                                                   "NOTE: If unicode_Write failed, this test will probably fail."
+End Sub
+
+''
+' Test that VBA TextStream appends the same bytes as Scripting TextStream when using ASCII (TristateFalse) format.
+'
+'@testmethod Scripting.TextStream
+''
+Private Sub ascii_Append()
+'---ARRANGE---
+    Dim test_Result As TResult
+'---ACT---
+    test_Result = private_Append(TristateFalse)
+'---ASSERT---
+    This.Assert.AreEqual test_Result.Expected, test_Result.Actual, "File contents do not match when appending ASCII bytes to file." & vbNewLine & _
+                                                                   "NOTE: If ascii_Write failed, this test will probably fail."
+End Sub
+
+''
+' Read characters encoded using Unicode (TristateTrue) with VBA TextStream and Scripting TextStream and compare results.
+'
+'@testmethod Scripting.TextStream
+''
+Private Sub unicode_ReadChr()
+'---ARRANGE---
+    Dim test_Result As TResult
+'---ACT---
+    test_Result = private_ReadChr(TristateTrue, TristateTrue)
+'---ASSERT---
+    This.Assert.SequenceEquals test_Result.Expected, test_Result.Actual, "Reading contents by character produced differing results." & vbNewLine & _
+                                                                         "NOTE: both 'Skip' and 'SkipLine' are used here, ensure these tests are passing in the first instance"
+End Sub
+''
+' Read characters encoded using ASCII (TristateFalse) with VBA TextStream and Scripting TextStream and compare results.
+'
+'@testmethod Scripting.TextStream
+''
+Private Sub ascii_ReadChr()
+'---ARRANGE---
+    Dim test_Result As TResult
+'---ACT---
+    test_Result = private_ReadChr(TristateFalse, TristateFalse)
+'---ASSERT---
+    This.Assert.SequenceEquals test_Result.Expected, test_Result.Actual, "Reading contents by character produced differing results." & vbNewLine & _
+                                                                         "NOTE: both 'Skip' and 'SkipLine' are used here, ensure these tests are passing in the first instance"
+End Sub
+
+
+' ============================================= '
+' Private Methods
+' ============================================= '
+
+''
+' Write contents to file in `WriteFormat` using TextStream methods:
+'  - WriteLine
+'  - Write
+'  - WriteBlankLines
+'
+' @param {Tristate} WriteFormat | Byte format to write file contents with.
+''
+Private Function private_Write(ByVal WriteFormat As Tristate) As TResult
+    ' Variables.
+    Dim test_ScrStream As Object
+    Dim test_VbaStream As TextStream
+    Dim test_ScrFilePath As String
+    Dim test_VbaFilePath As String
     
-    test_Loop = True
-    scr_FilePath = "C:\Users\AndrewPullon\Documents\repos\RadiusCore\radius-excel\scr.txt"
-    vba_FilePath = "C:\Users\AndrewPullon\Documents\repos\RadiusCore\radius-excel\vba.txt"
-    Set scr_FSO = CreateObject("Scripting.FileSystemObject")
-    Set vba_FSO = New FileSystemObject
-    
-    test_Unicode = True
-    
+'---ARRANGE---
     ' Create files.
-    Set scr_TextStream = scr_FSO.CreateTextFile(scr_FilePath, True, test_Unicode)
-    With scr_TextStream
+    Select Case WriteFormat
+    Case Tristate.TristateTrue ' Unicode
+        test_ScrFilePath = This.unicode_ScrFilePath
+        test_VbaFilePath = This.unicode_VbaFilePath
+        Set test_ScrStream = This.ScrFileSystem.CreateTextFile(test_ScrFilePath, True, True)
+        Set test_VbaStream = This.VbaFileSystem.CreateTextFile(test_VbaFilePath, True, True)
+    Case Tristate.TristateFalse ' ASCII
+        test_ScrFilePath = This.ascii_ScrFilePath
+        test_VbaFilePath = This.ascii_VbaFilePath
+        Set test_ScrStream = This.ScrFileSystem.CreateTextFile(test_ScrFilePath, True, False)
+        Set test_VbaStream = This.VbaFileSystem.CreateTextFile(test_VbaFilePath, True, False)
+    Case Else
+        ' TODO - currently not supported.
+    End Select
+    
+'---ACT---
+    ' Write the same contents to file using Scripting and VisualBasic.
+    With test_ScrStream
         .WriteLine "Hello World"
         .WriteLine "Hello World(2)"
         .WriteLine "Hello World(3)"
-        .Write "Heloow!!!!"
-        .Write "Heloow!!!!"
+        .Write "Hello World"
+        .Write "Hello World"
         .WriteBlankLines 4
         .Close
     End With
-    Set vba_TextStream = vba_FSO.CreateTextFile(vba_FilePath, True, test_Unicode)
-    With vba_TextStream
+    With test_VbaStream
         .WriteLine "Hello World"
         .WriteLine "Hello World(2)"
         .WriteLine "Hello World(3)"
-        .WriteStr "Heloow!!!!"
-        .WriteStr "Heloow!!!!"
+        .WriteStr "Hello World"
+        .WriteStr "Hello World"
         .WriteBlankLines 4
         .CloseFile
     End With
+    
+'---ASSERT---
+    ' Read contents of both files using Scripting.
+    private_Write.Expected = This.ScrFileSystem.OpenTextFile(test_ScrFilePath, ForReading, False, WriteFormat).ReadAll
+    private_Write.Actual = This.ScrFileSystem.OpenTextFile(test_VbaFilePath, ForReading, False, WriteFormat).ReadAll
+End Function
 
-testloop:
-    ' Verify contents are the same, using Scripting..
-    Set scr_TextStream = scr_FSO.OpenTextFile(scr_FilePath, ForReading, False, VBA.IIf(test_Unicode, TristateTrue, TristateFalse))
-    scr_Str = scr_TextStream.ReadAll
-    scr_TextStream.Close
-    Set scr_TextStream = scr_FSO.OpenTextFile(vba_FilePath, ForReading, False, VBA.IIf(test_Unicode, TristateTrue, TristateFalse))
-    vba_Str = scr_TextStream.ReadAll
-    scr_TextStream.Close
-    Debug.Print scr_Str = vba_Str
+''
+' Create a file in `WriteFormat`, write a few lines then close. Open in Append and append content
+' using `WriteFormat`.
+'
+' Used by tests:
+'  - unicode_Append
+'  - ascii_Append
+'
+' @param {Tristate} WriteFormat | Byte format to write/append file contents with.
+''
+Private Function private_Append(ByVal WriteFormat As Tristate) As TResult
+    ' Variables.
+    Dim test_ScrStream As Object
+    Dim test_VbaStream As TextStream
+    Dim test_ScrFilePath As String
+    Dim test_VbaFilePath As String
     
-    ' Verify contents are the same, using VBA.
-    Set vba_TextStream = vba_FSO.OpenTextFile(scr_FilePath, ForReading, False, VBA.IIf(test_Unicode, TristateTrue, TristateFalse))
-    scr_Str = vba_TextStream.ReadAll
-    vba_TextStream.CloseFile
-    Set vba_TextStream = vba_FSO.OpenTextFile(vba_FilePath, ForReading, False, VBA.IIf(test_Unicode, TristateTrue, TristateFalse))
-    vba_Str = vba_TextStream.ReadAll
-    vba_TextStream.CloseFile
-    Debug.Print scr_Str = vba_Str
+'---ARRANGE---
+    ' Create files & write a few lines.
+    Select Case WriteFormat
+    Case Tristate.TristateTrue ' Unicode
+        test_ScrFilePath = This.unicode_ScrFilePath
+        test_VbaFilePath = This.unicode_VbaFilePath
+        Set test_ScrStream = This.ScrFileSystem.CreateTextFile(test_ScrFilePath, True, True)
+        Set test_VbaStream = This.VbaFileSystem.CreateTextFile(test_VbaFilePath, True, True)
+    Case Tristate.TristateFalse ' ASCII
+        test_ScrFilePath = This.ascii_ScrFilePath
+        test_VbaFilePath = This.ascii_VbaFilePath
+        Set test_ScrStream = This.ScrFileSystem.CreateTextFile(test_ScrFilePath, True, False)
+        Set test_VbaStream = This.VbaFileSystem.CreateTextFile(test_VbaFilePath, True, False)
+    Case Else
+        ' TODO - currently not supported.
+    End Select
+    test_ScrStream.WriteLine "This is the first line in the file, which will have content appended."
+    test_VbaStream.WriteLine "This is the first line in the file, which will have content appended."
+    test_ScrStream.Close
+    test_VbaStream.CloseFile
     
-    ' Compare read of same file, different TextStreams.
-    For Each test_Item In Array(scr_FilePath, vba_FilePath)
-        Set scr_TextStream = scr_FSO.OpenTextFile(test_Item, ForReading, False, VBA.IIf(test_Unicode, TristateTrue, TristateFalse))
-        scr_Str = scr_TextStream.ReadAll
-        scr_TextStream.Close
-        Set vba_TextStream = vba_FSO.OpenTextFile(test_Item, ForReading, False, VBA.IIf(test_Unicode, TristateTrue, TristateFalse))
-        vba_Str = vba_TextStream.ReadAll
-        vba_TextStream.CloseFile
-        Debug.Print scr_Str = vba_Str
-    Next test_Item
+    ' Open files for appending.
+    Set test_ScrStream = This.ScrFileSystem.OpenTextFile(test_ScrFilePath, ForAppending, False, WriteFormat)
+    Set test_VbaStream = This.VbaFileSystem.OpenTextFile(test_VbaFilePath, ForAppending, False, WriteFormat)
+
+'---ACT---
+    ' Append the same contents to file using Scripting and VisualBasic.
+    With test_ScrStream
+        .WriteLine vbNullString
+        .Write vbNullString
+        .WriteLine "AppendLine1"
+        .WriteLine "AppendLine2"
+        .WriteLine "AppendLine3"
+        .Write "AppendLine4"
+        .Write "...Continued line4"
+        .WriteBlankLines 4
+        .Close
+    End With
+    With test_VbaStream
+        .WriteLine vbNullString
+        .WriteStr vbNullString
+        .WriteLine "AppendLine1"
+        .WriteLine "AppendLine2"
+        .WriteLine "AppendLine3"
+        .WriteStr "AppendLine4"
+        .WriteStr "...Continued line4"
+        .WriteBlankLines 4
+        .CloseFile
+    End With
     
-    If test_Loop Then
-        ' Append content to file, then perform same checks.
-        Set scr_TextStream = scr_FSO.OpenTextFile(scr_FilePath, ForAppending, False, VBA.IIf(test_Unicode, TristateTrue, TristateFalse))
-        With scr_TextStream
-            .WriteLine vbNullString
-            .Write vbNullString
-            .WriteLine "AppendLine1"
-            .WriteLine "AppendLine2"
-            .WriteLine "AppendLine3"
-            .Write "AppendLine4"
-            .Write "...Continued line4"
-            .WriteBlankLines 4
-            .Close
-        End With
-        Set vba_TextStream = vba_FSO.OpenTextFile(vba_FilePath, ForAppending, False, VBA.IIf(test_Unicode, TristateTrue, TristateFalse))
-        With vba_TextStream
-            .WriteLine vbNullString
-            .WriteStr vbNullString
-            .WriteLine "AppendLine1"
-            .WriteLine "AppendLine2"
-            .WriteLine "AppendLine3"
-            .WriteStr "AppendLine4"
-            .WriteStr "...Continued line4"
-            .WriteBlankLines 4
-            .CloseFile
-        End With
-        test_Loop = False
-        GoTo testloop
-    End If
+'---ASSERT---
+    ' Read contents of both files using Scripting.
+    private_Append.Expected = This.ScrFileSystem.OpenTextFile(test_ScrFilePath, ForReading, False, WriteFormat).ReadAll
+    private_Append.Actual = This.ScrFileSystem.OpenTextFile(test_VbaFilePath, ForReading, False, WriteFormat).ReadAll
+End Function
+
+''
+' Create file in `WriteFormat` then read using `TextStream.Read` method (specifiying number of characters) in `ReadFormat`.
+'
+' Used by tests:
+'  - unicode_ReadChr
+'  - ascii_ReadChr
+''
+Private Function private_ReadChr(ByVal WriteFormat As Tristate, ByVal ReadFormat As Tristate) As TResult
+    Dim test_ScrStream As Object
+    Dim test_VbaStream As TextStream
+    Dim test_ScrChar(1 To 5) As String
+    Dim test_VbaChar(1 To 5) As String
+    Dim test_TargetFilePath As String
     
-    ' Test properties
-    Set scr_TextStream = scr_FSO.OpenTextFile(scr_FilePath, ForReading, False, VBA.IIf(test_Unicode, TristateTrue, TristateFalse))
-    scr_Str = scr_TextStream.Read(11)
-    'scr_Str = scr_TextStream.ReadAll
+'---ARRANGE---
+    ' Create files & write a few lines.
+    Select Case WriteFormat
+    Case Tristate.TristateFalse ' ASCII
+        test_TargetFilePath = This.ascii_ScrFilePath
+        Set test_ScrStream = This.ScrFileSystem.CreateTextFile(test_TargetFilePath, True, False)
+    Case Tristate.TristateTrue ' Unicode.
+        test_TargetFilePath = This.unicode_ScrFilePath
+        Set test_ScrStream = This.ScrFileSystem.CreateTextFile(test_TargetFilePath, True, True)
+    Case Else
+        ' TODO - currently not supported.
+    End Select
+    With test_ScrStream
+        .WriteLine vbNullString
+        .Write vbNullString
+        .WriteLine "SampleLineOne"
+        .WriteLine "SampleLineTwo"
+        .WriteLine "SampleLineThree"
+        .WriteBlankLines 4
+    End With
     
-    Set vba_TextStream = vba_FSO.OpenTextFile(vba_FilePath, ForReading, False, VBA.IIf(test_Unicode, TristateTrue, TristateFalse))
-    vba_Str = vba_TextStream.Read(11)
-    'vba_Str = vba_TextStream.ReadAll
+'---ACT---
+    ' Read random characters.
+    Set test_ScrStream = This.ScrFileSystem.OpenTextFile(test_TargetFilePath, ForReading, False, ReadFormat)
+    With test_ScrStream
+        test_ScrChar(1) = .Read(1)
+        test_ScrChar(2) = .Read(5)
+        .Skip 15
+        test_ScrChar(3) = .Read(2)
+        test_ScrChar(4) = .Read(4)
+        .SkipLine
+        test_ScrChar(5) = .Read(1)
+        .Close
+    End With
+    Set test_VbaStream = This.VbaFileSystem.OpenTextFile(test_TargetFilePath, ForReading, False, ReadFormat)
+    With test_VbaStream
+        test_VbaChar(1) = .Read(1)
+        test_VbaChar(2) = .Read(5)
+        .Skip 15
+        test_VbaChar(3) = .Read(2)
+        test_VbaChar(4) = .Read(4)
+        .SkipLine
+        test_VbaChar(5) = .Read(1)
+        .CloseFile
+    End With
     
-    Debug.Print scr_Str = vba_Str
-    Debug.Print scr_TextStream.Line = vba_TextStream.Line
-    Debug.Print scr_TextStream.Column = vba_TextStream.Column
-    
-    scr_TextStream.Close
-    vba_TextStream.CloseFile
-    
-    'Set scr_TextStream = scr_FSO.OpenTextFile("C:\Users\AndrewPullon\Documents\repos\RadiusCore\radius-excel\logs\RadiusCore.txt", ForReading, False, TristateFalse)
-    'scr_TextStream.Skip 200
-    'scr_Str = scr_TextStream.ReadLine
-    'scr_TextStream.Close
-    'Set vba_TextStream = vba_FSO.OpenTextFile("C:\Users\AndrewPullon\Documents\repos\RadiusCore\radius-excel\logs\RadiusCore.txt", ForReading, False, TristateFalse)
-    'vba_TextStream.Skip 200
-    'vba_Str = vba_TextStream.ReadLine
-    'vba_TextStream.CloseFile
-    'Debug.Print scr_Str = vba_Str
-End Sub
+'---ASSERT---
+    private_ReadChr.Expected = test_ScrChar
+    private_ReadChr.Actual = test_VbaChar
+End Function
 
 ' ============================================= '
 ' Initialize & Terminate Methods
@@ -215,19 +337,36 @@ End Sub
 
 '@TestCleanup
 Private Sub TestCleanup()
-    'this method runs after every test in the module.
+    Dim test_Item As Variant
+    With This
+        For Each test_Item In Array(.unicode_ScrFilePath, .unicode_VbaFilePath, .ascii_ScrFilePath, .ascii_VbaFilePath)
+            If .ScrFileSystem.FileExists(test_Item) Then .ScrFileSystem.DeleteFile test_Item, True
+        Next test_Item
+    End With
 End Sub
 
 '@ModuleInitialize
 Private Sub ModuleInitialize()
-    Set This.Assert = CreateObject("Rubberduck.AssertClass")
-    Set This.Fakes = CreateObject("Rubberduck.FakesProvider")
+    With This
+        Set .Assert = CreateObject("Rubberduck.AssertClass")
+        Set .Fakes = CreateObject("Rubberduck.FakesProvider")
+        Set .ScrFileSystem = CreateObject("Scripting.FileSystemObject")
+        Set .VbaFileSystem = New FileSystemObject
+        .unicode_ScrFilePath = .ScrFileSystem.BuildPath(ThisWorkbook.Path, "test_unicode_Scripting.txt")
+        .unicode_VbaFilePath = .ScrFileSystem.BuildPath(ThisWorkbook.Path, "test_unicode_VisualBasic.txt")
+        .ascii_ScrFilePath = .ScrFileSystem.BuildPath(ThisWorkbook.Path, "test_ascii_Scripting.txt")
+        .ascii_VbaFilePath = .ScrFileSystem.BuildPath(ThisWorkbook.Path, "test_ascii_VisualBasic.txt")
+    End With
 End Sub
 
 '@ModuleCleanup
 Private Sub ModuleCleanup()
-    Set This.Assert = Nothing
-    Set This.Fakes = Nothing
+    With This
+        Set .Assert = Nothing
+        Set .Fakes = Nothing
+        Set .ScrFileSystem = Nothing
+        Set .VbaFileSystem = Nothing
+    End With
 End Sub
 
 
