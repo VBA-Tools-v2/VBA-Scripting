@@ -188,8 +188,12 @@ Public Sub OpenFile(ByVal FilePath As String, ByVal Mode As IOMode, ByVal Format
         Open FilePath For Binary Access Read As #This.FileID
         If Not VBA.LOF(This.FileID) = 0 Then ReDim txt_Bytes(1 To VBA.LOF(This.FileID))
         Get #This.FileID, 1, txt_Bytes
-        ' Split bytes into lines.
-        txtstr_BytesToLineBytes txtstr_RemoveBOM(txt_Bytes), This.FileLines
+        ' Split bytes into lines, removing BOM if Unicode format.
+        If This.Format = TristateTrue Then
+            txtstr_BytesToLineBytes txtstr_RemoveBOM(txt_Bytes), This.FileLines
+        Else
+            txtstr_BytesToLineBytes txt_Bytes, This.FileLines
+        End If
     End Select
 #Else
     Dim txtstr_FSO As Object
