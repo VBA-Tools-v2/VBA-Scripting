@@ -339,14 +339,17 @@ Public Sub Skip(ByVal Characters As Long)
     If Not This.Mode = ForReading Then Err.Raise 54, , "Bad file mode"
     If Me.AtEndOfStream Then Err.Raise 62, , "Input past end of file"
     
+    Dim txt_CharsToRead As Long
     Dim txt_CharsSkipped As Long
     Dim txt_Long As Long
+    txt_CharsToRead = Characters * VBA.IIf(This.Format = TristateTrue, 2, 1)
     txt_CharsSkipped = 0
     
-    Do Until txt_CharsSkipped = Characters
+    
+    Do Until txt_CharsSkipped = txt_CharsToRead
         For txt_Long = This.ColumnNo To UBound(This.FileLines(This.LineNo))
             txt_CharsSkipped = txt_CharsSkipped + 1
-            If txt_CharsSkipped = Characters Then Exit For
+            If txt_CharsSkipped = txt_CharsToRead Then Exit For
         Next txt_Long
         This.ColumnNo = txt_Long + 1
         If AtEndOfStream Then: This.ColumnNo = This.ColumnNo - 1: Exit Do
