@@ -71,24 +71,45 @@ Public Function BuildPath(ByVal Path As String, ByVal Name As String) As String
     ' Variables.
     Dim fso_Path As String
     Dim fso_Name As String
+    Dim fso_Separator As String
     fso_Path = Path
     fso_Name = Name
     
-    ' Add separator if required.
-    If Not (VBA.Right$(fso_Path, 1) = "/") And Not (VBA.Right$(fso_Path, 1) = "\") And Not (VBA.Right$(fso_Path, 1) = ":") Then
-        If VBA.InStr(fso_Path, "/") > 0 Then
-            fso_Path = fso_Path & "/"
-        ElseIf VBA.InStr(fso_Path, "\") > 0 Then
-            fso_Path = fso_Path & "\"
-        Else
-            fso_Path = fso_Path & ":"
+    ' Determine correct path separator.
+    ' Check path for valid sepatator first. If one is not found, check the Name.
+    If VBA.InStr(fso_Path, "/") Then
+        fso_Separator = "/"
+    ElseIf VBA.InStr(fso_Path, "\") Then
+        fso_Separator = "\"
+    ElseIf VBA.InStr(fso_Name, "/") Then
+        fso_Separator = "/"
+    ElseIf VBA.InStr(fso_Name, "\") Then
+        fso_Separator = "/"
+#If Mac Then
+        ' Mac, use default Mac path separator.
+        fso_Separator = ":"
+#Else
+        ' Windows, use default Windows path separator.
+        fso_Separator = "\"
+#End If
+    End If
+    
+    ' Add path separator to path if required.
+    If Not fso_Path = vbNullString And Not fso_Name = vbNullString Then
+        If Not (VBA.Right$(fso_Path, 1) = fso_Separator) Then
+            fso_Path = fso_Path & fso_Separator
         End If
     End If
     
-    ' Check `Name` for separator.
-    If VBA.Left$(fso_Name, 1) = "/" Or VBA.Left$(fso_Name, 1) = "\" Or VBA.Left$(fso_Name, 1) = ":" Then
+    ' Remove path separator from name if required. (check for ALL separators).
+    If VBA.Left$(fso_Name, 1) = "/" Or VBA.Left$(fso_Name, 1) = "\" Then
         fso_Name = VBA.Right$(fso_Name, VBA.Len(fso_Name) - 1)
     End If
+#If Mac Then
+    If VBA.Left$(fso_Name, 1) = ":" Then
+        fso_Name = VBA.Right$(fso_Name, VBA.Len(fso_Name) - 1)
+    End If
+#End If
     
     ' Create path
     BuildPath = fso_Path & fso_Name
@@ -312,6 +333,23 @@ Public Function FolderExists(ByVal FolderSpec As String) As Boolean
 End Function
 
 ''
+' VBA implementation of FileSystemObject `GetBaseName` method.
+' https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/getbasename-method
+'
+' Returns a string containing the base name of the last component, less any file extension, in a path.
+'
+' @method GetBaseName
+' @param {String} Path | The path specification for the component whose base name is to be returned.
+' @return {String}
+''
+Public Function GetBaseName(ByVal Path As String) As String
+    ' TEMP
+    Dim fso_Object As Object
+    Set fso_Object = CreateObject("Scripting.FileSystemObject")
+    GetBaseName = fso_Object.GetBaseName(Path)
+End Function
+
+''
 ' VBA implementation of FileSystemObject `GetExtensionName` method.
 ' https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/getextensionname-method
 '
@@ -328,9 +366,51 @@ Public Function GetExtensionName(ByVal Path As String) As String
 End Function
 
 ''
-' TEMP until I've created the 'Folder' class in VBA.
+' VBA implementation of FileSystemObject `GetFile` method.
+' https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/getfile-method
+'
+' Returns a File object corresponding to the file in a specified path.
+'
+' @method GetFileName
+' @param {String} FileSpec | The path (absolute or relative) to a specific file.
+' @return {File}
+''
+Public Function GetFile(ByVal FileSpec As String) As Object
+    ' TEMP
+    Dim fso_Object As Object
+    Set fso_Object = CreateObject("Scripting.FileSystemObject")
+    Set GetFile = fso_Object.GetFile(FileSpec)
+End Function
+
+''
+' VBA implementation of FileSystemObject `GetFileName` method.
+' https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/getfilename-method-visual-basic-for-applications
+'
+' Returns the last component of a specified path that is not part of the drive specification.
+'
+' @method GetFileName
+' @param {String} PathSpec | The path (absolute or relative) to a specific file.
+' @return {String}
+''
+Public Function GetFileName(ByVal PathSpec As String) As String
+    ' TEMP
+    Dim fso_Object As Object
+    Set fso_Object = CreateObject("Scripting.FileSystemObject")
+    GetFileName = fso_Object.GetFileName(PathSpec)
+End Function
+
+''
+' VBA implementation of FileSystemObject `GetFolder` method.
+' https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/getfolder-method
+'
+' Returns a Folder object corresponding to the folder in a specified path.
+'
+' @method GetFolder
+' @param {String} FolderSpec | The folderspec is the path (absolute or relative) to a specific folder.
+' @return {String}
 ''
 Public Function GetFolder(ByVal FolderSpec As String) As Object
+    ' TEMP
     If Not Me.FolderExists(FolderSpec) Then
         Debug.Print "Raise Error Here"
     End If
@@ -357,6 +437,23 @@ Public Function GetParentFolderName(ByVal Path As String) As String
         GetParentFolderName = VBA.Mid$(Path, 1, VBA.InStrRev(Path, "\") - 1)
     End If
 End Function
+
+''
+' VBA implementation of FileSystemObject `MoveFile` method.
+' https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/movefile-method
+'
+' Moves one or more files from one location to another.
+'
+' @method MoveFile
+' @param {String} Source | The path to the file or files to be moved. The source argument string can contain wildcard characters in the last path component only.
+' @param {String} Destination | The path where the file or files are to be moved. The destination argument can't contain wildcard characters.
+''
+Public Sub MoveFile(ByVal Source As String, ByVal Destination As String)
+    ' TEMP
+    Dim fso_Object As Object
+    Set fso_Object = CreateObject("Scripting.FileSystemObject")
+    fso_Object.MoveFile Source, Destination
+End Sub
 
 ''
 ' VBA implementation of FileSystemObject `OpenTextFile` method.
