@@ -269,6 +269,31 @@ Private Sub GetExtensionName_EndWithFileSeparator()
 End Sub
 
 ' --------------------------------------------- '
+' GetFileName
+' --------------------------------------------- '
+
+'@testmethod FileSystem.GetFileName
+Private Sub GetFileName_EmptyString()
+    This.Assert.AreEqual This.ScrFileSystem.GetFileName(vbNullString), This.VbaFileSystem.GetFileName(vbNullString)
+End Sub
+'@testmethod FileSystem.GetFileName
+Private Sub GetFileName_NoPathSeparator()
+    This.Assert.AreEqual This.ScrFileSystem.GetFileName("Hello World.txt"), This.VbaFileSystem.GetFileName("Hello World.txt")
+End Sub
+'@testmethod FileSystem.GetFileName
+Private Sub GetFileName_RelativePath()
+    This.Assert.AreEqual This.ScrFileSystem.GetFileName("..\Documents\HelloWorld.txt"), This.VbaFileSystem.GetFileName("..\Documents\HelloWorld.txt")
+End Sub
+'@testmethod FileSystem.GetFileName
+Private Sub GetFileName_EndWithFileSeparator()
+    This.Assert.AreEqual This.ScrFileSystem.GetFileName("C:\Users\JohnDoe\Documents\"), This.VbaFileSystem.GetFileName("C:\Users\JohnDoe\Documents\")
+End Sub
+'@testmethod FileSystem.GetFileName
+Private Sub GetFileName_DriveSpecOnly()
+    This.Assert.AreEqual This.ScrFileSystem.GetFileName("C:\"), This.VbaFileSystem.GetFileName("C:\")
+End Sub
+
+' --------------------------------------------- '
 ' Speed Tests
 ' --------------------------------------------- '
 
@@ -426,6 +451,32 @@ Private Sub speedtest_GetExtensionName()
     
     This.Assert.Inconclusive "SCR=" & test_ScrMs & "ms | VBA=" & test_VbaMS & "ms | " & VBA.IIf(test_VbaMS > test_ScrMs, "Scripting", "VBA") & " is " & VBA.Round(VBA.IIf(test_VbaMS > test_ScrMs, test_VbaMS / test_ScrMs, test_ScrMs / test_VbaMS), 4) & " times faster."
 End Sub
+'@testmethod FileSystem.SpeedTest
+Private Sub speedtest_GetFileName()
+    Dim test_Temp As String
+    Dim test_Long As Long
+    Dim test_StartTime As Date
+    Dim test_FinishTime As Date
+    Dim test_VbaMS As Double
+    Dim test_ScrMs As Double
+    
+    test_StartTime = VBA.Date + CDate(VBA.Timer / 86400)
+    For test_Long = 1 To 1000000
+        test_Temp = This.ScrFileSystem.GetFileName("C:\Users\JohnDoe\Documents\Hello World.txt")
+    Next test_Long
+    test_FinishTime = VBA.Date + CDate(VBA.Timer / 86400)
+    test_ScrMs = VBA.Round((test_FinishTime - test_StartTime) * 86400 * 1000, 4)
+    
+    test_StartTime = VBA.Date + CDate(VBA.Timer / 86400)
+    For test_Long = 1 To 1000000
+        test_Temp = This.VbaFileSystem.GetFileName("C:\Users\JohnDoe\Documents\Hello World.txt")
+    Next test_Long
+    test_FinishTime = VBA.Date + CDate(VBA.Timer / 86400)
+    test_VbaMS = VBA.Round((test_FinishTime - test_StartTime) * 86400 * 1000, 4)
+    
+    This.Assert.Inconclusive "SCR=" & test_ScrMs & "ms | VBA=" & test_VbaMS & "ms | " & VBA.IIf(test_VbaMS > test_ScrMs, "Scripting", "VBA") & " is " & VBA.Round(VBA.IIf(test_VbaMS > test_ScrMs, test_VbaMS / test_ScrMs, test_ScrMs / test_VbaMS), 4) & " times faster."
+End Sub
+
 ' ============================================= '
 ' Initialize & Terminate Methods
 ' ============================================= '
