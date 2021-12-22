@@ -285,18 +285,9 @@ End Sub
 ' @param {String} FileSpec | The name of the file whose existence is to be determined.
 ' @return {Boolean}
 ''
-Public Function FileExists(ByVal FileSpec As String) As Boolean
-    Dim fso_File As String
-    fso_File = FileSpec
-    FileExists = False
-    
-    If VBA.Right$(fso_File, 1) = "/" Or VBA.Right$(fso_File, 1) = "\" Or VBA.Right$(fso_File, 1) = ":" Then
-        fso_File = VBA.Left$(fso_File, VBA.Len(fso_File) - 1)
-    End If
-    
-    If VBA.Len(VBA.Dir(fso_File)) > 0 Then
-        FileExists = True
-    End If
+Public Function FileExists(FileSpec As String) As Boolean
+    If FileSpec = vbNullString Or VBA.Right$(FileSpec, 1) = "/" Or VBA.Right$(FileSpec, 1) = "\" Then Exit Function ' Return False if passed `FileSpec` that is blank or ending in file separator.
+    FileExists = Not VBA.Dir(FileSpec) = vbNullString
 End Function
 
 ''
