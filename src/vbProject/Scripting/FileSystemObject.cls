@@ -77,52 +77,42 @@ End Enum
 ' @param {String} Name | Name of a folder or file being appended to the existing `Path`.
 ' @return {String}
 ''
-Public Function BuildPath(ByVal Path As String, ByVal Name As String) As String
-    ' Variables.
-    Dim fso_Path As String
-    Dim fso_Name As String
+Public Function BuildPath(Path As String, Name As String) As String
     Dim fso_Separator As String
-    fso_Path = Path
-    fso_Name = Name
-    
-    ' Determine correct path separator.
+
     ' Check path for valid sepatator first. If one is not found, check the Name.
-    If VBA.InStr(fso_Path, "/") Then
+    If VBA.InStr(Path, "/") Then
         fso_Separator = "/"
-    ElseIf VBA.InStr(fso_Path, "\") Then
+    ElseIf VBA.InStr(Path, "\") Then
         fso_Separator = "\"
-    ElseIf VBA.InStr(fso_Name, "/") Then
+    ElseIf VBA.InStr(Name, "/") Then
         fso_Separator = "/"
-    ElseIf VBA.InStr(fso_Name, "\") Then
-        fso_Separator = "/"
-#If Mac Then
-        ' Mac, use default Mac path separator.
-        fso_Separator = ":"
-#Else
-        ' Windows, use default Windows path separator.
+    ElseIf VBA.InStr(Name, "\") Then
         fso_Separator = "\"
-#End If
+    Else
+        fso_Separator = Application.PathSeparator ' Use default file separator.
     End If
-    
-    ' Add path separator to path if required.
-    If Not fso_Path = vbNullString And Not fso_Name = vbNullString Then
-        If Not (VBA.Right$(fso_Path, 1) = fso_Separator) Then
-            fso_Path = fso_Path & fso_Separator
+
+    ' Start result with `Path`.
+    BuildPath = Path
+
+    ' Add file separator (if not already present).
+    If Not Path = vbNullString And Not Name = vbNullString Then
+        If Not VBA.Right$(Path, 1) = fso_Separator Then
+            BuildPath = BuildPath & fso_Separator
         End If
     End If
-    
-    ' Remove path separator from name if required. (check for ALL separators).
-    If VBA.Left$(fso_Name, 1) = "/" Or VBA.Left$(fso_Name, 1) = "\" Then
-        fso_Name = VBA.Right$(fso_Name, VBA.Len(fso_Name) - 1)
-    End If
-#If Mac Then
-    If VBA.Left$(fso_Name, 1) = ":" Then
-        fso_Name = VBA.Right$(fso_Name, VBA.Len(fso_Name) - 1)
+
+    ' Append `Name`, removing separator if present (check for ALL separators).
+    If Not Name = vbNullString Then
+        Select Case VBA.Asc(Name)
+        Case 47, 92 ' ASCII Codes: `/`=47 | `\`=92
+            BuildPath = BuildPath & VBA.Mid$(Name, 2)
+        Case Else
+            BuildPath = BuildPath & Name
+        End Select
     End If
 #End If
-    
-    ' Create path
-    BuildPath = fso_Path & fso_Name
 End Function
 
 ''
