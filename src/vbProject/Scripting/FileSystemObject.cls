@@ -315,11 +315,14 @@ End Function
 ' @param {String} Path | The path specification for the component whose base name is to be returned.
 ' @return {String}
 ''
-Public Function GetBaseName(ByVal Path As String) As String
-    ' TEMP
-    Dim fso_Object As Object
-    Set fso_Object = CreateObject("Scripting.FileSystemObject")
-    GetBaseName = fso_Object.GetBaseName(Path)
+Public Function GetBaseName(Path As String) As String
+    ' Get last component in path.
+    GetBaseName = Me.GetFileName(Path)
+    
+    ' Remove file extension if present.
+    If VBA.InStr(GetBaseName, ".") <> 0 Then
+        GetBaseName = VBA.Mid$(GetBaseName, 1, VBA.InStrRev(GetBaseName, ".") - 1)
+    End If
 End Function
 
 ''
