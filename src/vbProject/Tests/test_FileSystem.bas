@@ -175,42 +175,36 @@ End Sub
 
 '@testmethod FileSystem.GetBaseName
 Private Sub GetBaseName_EmptyString()
-    '---ASSERT---
-    This.Assert.AreEqual This.ScrFileSystem.GetBaseName(vbNullString), This.VbaFileSystem.GetBaseName(vbNullString), "GetBaseName does not produce expected result when passed an empty string."
+    This.Assert.AreEqual This.ScrFileSystem.GetBaseName(vbNullString), This.VbaFileSystem.GetBaseName(vbNullString)
 End Sub
 '@testmethod FileSystem.GetBaseName
-Private Sub GetBaseName_InvalidString()
-'---ARRANGE---
-    Dim test_InvalidPath As String
-'---ACT---
-    test_InvalidPath = "LoremIpsum"
-'---ASSERT---
-    This.Assert.AreEqual This.ScrFileSystem.GetBaseName(test_InvalidPath), This.VbaFileSystem.GetBaseName(test_InvalidPath), "GetBaseName does not produce expected result when passed an invalid file path."
+Private Sub GetBaseName_NoFileSeparator()
+    This.Assert.AreEqual This.ScrFileSystem.GetBaseName("Hello World"), This.VbaFileSystem.GetBaseName("Hello World")
 End Sub
 '@testmethod FileSystem.GetBaseName
 Private Sub GetBaseName_RelativePath()
-'---ARRANGE---
-    Dim test_RelativePath As String
-'---ACT---
-    test_RelativePath = "..\Documents\HelloWorld.txt"
-'---ASSERT---
-    This.Assert.AreEqual This.ScrFileSystem.GetBaseName(test_RelativePath), This.VbaFileSystem.GetBaseName(test_RelativePath), "GetBaseName does not produce expected result when passed a relative file path."
+    This.Assert.AreEqual This.ScrFileSystem.GetBaseName("..\Documents\HelloWorld.txt"), This.VbaFileSystem.GetBaseName("..\Documents\HelloWorld.txt")
 End Sub
 '@testmethod FileSystem.GetBaseName
-Private Sub GetBaseName_AbsolutePath()
-'---ARRANGE---
-    Dim test_AbsolutePath As String
-'---ACT---
-    test_AbsolutePath = "C:\Users\JohnDoe\Documents\HelloWorld.txt"
-'---ASSERT---
-    This.Assert.AreEqual This.ScrFileSystem.GetBaseName(test_AbsolutePath), This.VbaFileSystem.GetBaseName(test_AbsolutePath), "GetBaseName does not produce expected result when passed an absolute file path."
+Private Sub GetBaseName_FileSeparatorBackslash()
+    This.Assert.AreEqual This.ScrFileSystem.GetBaseName("C:\Users\JohnDoe\Documents\HelloWorld.txt"), This.VbaFileSystem.GetBaseName("C:\Users\JohnDoe\Documents\HelloWorld.txt")
 End Sub
 '@testmethod FileSystem.GetBaseName
-Private Sub GetBaseName_PathSeparatorForwardslash()
-
+Private Sub GetBaseName_FileSeparatorForwardslash()
+    This.Assert.AreEqual This.ScrFileSystem.GetBaseName("https://www.google.co.nz/HelloWorld.txt"), This.VbaFileSystem.GetBaseName("https://www.google.co.nz/HelloWorld.txt")
 End Sub
 '@testmethod FileSystem.GetBaseName
-Private Sub GetBaseName_PathSeparatorColon()
+Private Sub GetBaseName_FileSeparatorMixed()
+    This.Assert.AreEqual This.ScrFileSystem.GetBaseName("C:\Users\JohnDoe\Documents/HelloWorld.txt"), This.VbaFileSystem.GetBaseName("C:\Users\JohnDoe\Documents/HelloWorld.txt")
+End Sub
+'@testmethod FileSystem.GetBaseName
+Private Sub GetBaseName_EndWithFileSeparator()
+    This.Assert.AreEqual This.ScrFileSystem.GetBaseName("C:\Users\JohnDoe\Documents\"), This.VbaFileSystem.GetBaseName("C:\Users\JohnDoe\Documents\")
+End Sub
+'@testmethod FileSystem.GetBaseName
+Private Sub GetBaseName_DriveSpecOnly()
+    This.Assert.AreEqual This.ScrFileSystem.GetBaseName("C:\"), This.VbaFileSystem.GetBaseName("C:\")
+End Sub
 
 End Sub
 ' --------------------------------------------- '
