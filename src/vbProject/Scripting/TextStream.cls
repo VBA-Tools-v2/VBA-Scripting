@@ -27,6 +27,11 @@ Attribute VB_Exposed = False
 '' ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ '
 Option Explicit
 
+
+' --------------------------------------------- '
+' Windows API Headers
+' --------------------------------------------- '
+
 #If Not Mac And Not UseScriptingTextStreamIfAvailable Then
 
 Private Declare PtrSafe Sub ByteCopyMemory Lib "kernel32" Alias "RtlMoveMemory" _

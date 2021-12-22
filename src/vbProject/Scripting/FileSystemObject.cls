@@ -16,6 +16,16 @@ Attribute VB_Exposed = False
 ' Native VBA implementation of `Scripting.FileSystemObject`
 ' https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/filesystemobject-object
 '
+' Notes on speed:
+' - Checking if string is empty is ~2 times faster using `MyString = vbNullString` vs `VBA.Len(MyString) = 0`.
+' - Checking the first character of a string is ~1.5 times faster using `VBA.Asc(MyString) = {AscCode}` vs `VBA.Left$(MyString,1) = {Letter}`.
+'    - NOTE: Asc method needs to have vbNullString check first, as it errors with an empty string. It is still faster even with this check.
+' - If `VBA.Mid$` can be used to replace a `VBA.Right$` call (which also requires a `VBA.Len` call) it will be ~1.5 times faster.
+' - Leaving params as implicitly `ByRef` is ~2 times faster then specifying `ByVal`. Although methods need to be careful not to modify the provided
+'   params or the implicit `ByRef` can cause bugs.
+' - If checking for the existance of one string within another, leaving the If statement without a specific right-hand value is ~1.1 times faster.
+'    - i.e. `If VBA.InStr(MyString, {Char}) Then` provides same effect (and is faster than) `If VBA.InStr(MyString, {Char}) > 0 Then`.
+'
 ' @module FileSystemObject
 ' @author Andrew Pullon | andrew.pullon@pkfh.co.nz | andrewcpullon@gmail.com
 ' ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ '
