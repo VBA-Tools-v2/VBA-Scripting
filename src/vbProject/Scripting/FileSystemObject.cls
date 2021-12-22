@@ -462,14 +462,14 @@ End Function
 '
 ' Returns a string containing the name of the parent folder of the last component in a specified path.
 '
-' @method FolderExists
+' @method GetParentFolderName
 ' @param {String} Path | The path specification for the component whose parent folder name is to be returned.
 ' @return {String}
 ''
 Public Function GetParentFolderName(ByVal Path As String) As String
-    If VBA.InStr(Path, "/") > 0 Then
+    If VBA.InStr(Path, "/") Then
         GetParentFolderName = VBA.Mid$(Path, 1, VBA.InStrRev(Path, "/") - 1)
-    ElseIf VBA.InStr(Path, "\") > 0 Then
+    ElseIf VBA.InStr(Path, "\") Then
         GetParentFolderName = VBA.Mid$(Path, 1, VBA.InStrRev(Path, "\") - 1)
     End If
 End Function
