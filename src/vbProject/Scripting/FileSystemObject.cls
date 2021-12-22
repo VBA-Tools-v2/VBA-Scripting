@@ -393,11 +393,42 @@ End Function
 ' @param {String} PathSpec | The path (absolute or relative) to a specific file.
 ' @return {String}
 ''
-Public Function GetFileName(ByVal PathSpec As String) As String
-    ' TEMP
-    Dim fso_Object As Object
-    Set fso_Object = CreateObject("Scripting.FileSystemObject")
-    GetFileName = fso_Object.GetFileName(PathSpec)
+Public Function GetFileName(PathSpec As String) As String
+    ' Variables.
+    Dim fso_Backslash As Long
+    Dim fso_Forwardslash As Long
+    
+    ' Trim file separator from path.
+    Select Case VBA.Right$(PathSpec, 1)
+    Case "\", "/"
+        GetFileName = VBA.Mid$(PathSpec, 1, VBA.Len(PathSpec) - 1)
+    Case Else
+        GetFileName = PathSpec
+    End Select
+    
+    ' Check if remaining path is a drive spec, exit if true.
+    If VBA.Len(GetFileName) = 2 Then
+        ' ASCII Codes: `A`=65 | `Z`=90
+        If VBA.Asc(GetFileName) >= 65 And VBA.Asc(GetFileName) <= 90 And VBA.Right$(GetFileName, 1) = ":" Then
+            GetFileName = vbNullString
+            Exit Function
+        End If
+    End If
+    
+    ' Find position of file separators.
+    fso_Backslash = VBA.InStrRev(GetFileName, "\")
+    fso_Forwardslash = VBA.InStrRev(GetFileName, "/")
+    
+    ' Remove path to left of file separator.
+    If fso_Backslash = 0 And fso_Forwardslash = 0 Then ' No file separator.
+        Exit Function
+    ElseIf fso_Backslash = 0 Then  ' Only Forwardslash separator.
+        GetFileName = VBA.Mid$(GetFileName, fso_Forwardslash + 1)
+    ElseIf fso_Forwardslash = 0 Then  ' Only Backwardslash separator.
+        GetFileName = VBA.Mid$(GetFileName, fso_Backslash + 1)
+    Else ' Both separators, use last one in path.
+        GetFileName = VBA.Mid$(GetFileName, VBA.IIf(fso_Backslash > fso_Forwardslash, fso_Backslash, fso_Forwardslash) + 1)
+    End If
 End Function
 
 ''
