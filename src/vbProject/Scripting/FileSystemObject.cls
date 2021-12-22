@@ -326,6 +326,25 @@ Public Function GetBaseName(Path As String) As String
 End Function
 
 ''
+' VBA implementation of FileSystemObject `GetDriveName` method.
+' https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/getdrivename-method
+'
+' Returns a string containing the name of the drive for a specified path.
+'
+' @method GetDriveName
+' @param {String} Path | The path specification for the component whose drive name is to be returned.
+' @return {String}
+''
+Public Function GetDriveName(Path As String) As String
+    If VBA.Len(Path) >= 2 Then
+        ' ASCII Codes: `A`=65 | `Z`=90
+        If VBA.Asc(Path) >= 65 And VBA.Asc(Path) <= 90 And VBA.Mid$(Path, 2, 1) = ":" Then
+            GetDriveName = VBA.Left$(Path, 2)
+        End If
+    End If
+End Function
+
+''
 ' VBA implementation of FileSystemObject `GetExtensionName` method.
 ' https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/getextensionname-method
 '
