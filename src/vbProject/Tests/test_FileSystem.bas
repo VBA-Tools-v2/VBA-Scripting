@@ -319,6 +319,31 @@ Private Sub speedtest_FolderExists()
     This.Assert.Inconclusive "SCR=" & test_ScrMs & "ms | VBA=" & test_VbaMS & "ms | " & VBA.IIf(test_VbaMS > test_ScrMs, "Scripting", "VBA") & " is " & VBA.Round(VBA.IIf(test_VbaMS > test_ScrMs, test_VbaMS / test_ScrMs, test_ScrMs / test_VbaMS), 4) & " times faster."
 End Sub
 '@testmethod FileSystem.SpeedTest
+Private Sub speedtest_GetBaseName()
+    Dim test_Temp As String
+    Dim test_Long As Long
+    Dim test_StartTime As Date
+    Dim test_FinishTime As Date
+    Dim test_VbaMS As Double
+    Dim test_ScrMs As Double
+    
+    test_StartTime = VBA.Date + CDate(VBA.Timer / 86400)
+    For test_Long = 1 To 1000000
+        test_Temp = This.ScrFileSystem.GetBaseName("C:\Users\JohnDoe\Documents\Hello World.txt")
+    Next test_Long
+    test_FinishTime = VBA.Date + CDate(VBA.Timer / 86400)
+    test_ScrMs = VBA.Round((test_FinishTime - test_StartTime) * 86400 * 1000, 4)
+    
+    test_StartTime = VBA.Date + CDate(VBA.Timer / 86400)
+    For test_Long = 1 To 1000000
+        test_Temp = This.VbaFileSystem.GetBaseName("C:\Users\JohnDoe\Documents\Hello World.txt")
+    Next test_Long
+    test_FinishTime = VBA.Date + CDate(VBA.Timer / 86400)
+    test_VbaMS = VBA.Round((test_FinishTime - test_StartTime) * 86400 * 1000, 4)
+    
+    This.Assert.Inconclusive "SCR=" & test_ScrMs & "ms | VBA=" & test_VbaMS & "ms | " & VBA.IIf(test_VbaMS > test_ScrMs, "Scripting", "VBA") & " is " & VBA.Round(VBA.IIf(test_VbaMS > test_ScrMs, test_VbaMS / test_ScrMs, test_ScrMs / test_VbaMS), 4) & " times faster."
+End Sub
+'@testmethod FileSystem.SpeedTest
 Private Sub speedtest_GetDriveName()
     Dim test_Temp As String
     Dim test_Long As Long
