@@ -354,10 +354,16 @@ End Function
 ' @param {String} Path | The path specification for the component whose extension name is to be returned.
 ' @return {String}
 ''
-Public Function GetExtensionName(ByVal Path As String) As String
-    ' TODO - need to check for '.' only in the LAST part of the path.
-    If Not VBA.InStr(Path, ".") > 0 Then Exit Function
-    GetExtensionName = VBA.Right$(Path, VBA.Len(Path) - VBA.InStrRev(Path, "."))
+Public Function GetExtensionName(Path As String) As String
+    ' Get last component in path.
+    GetExtensionName = Me.GetFileName(Path)
+
+    ' Extract file extension if present.
+    If VBA.InStr(GetExtensionName, ".") Then
+        GetExtensionName = VBA.Mid$(GetExtensionName, VBA.InStrRev(GetExtensionName, ".") + 1)
+    Else
+        GetExtensionName = vbNullString
+    End If
 End Function
 
 ''
