@@ -14,8 +14,8 @@ Option Private Module
 ' --------------------------------------------- '
 
 Private Type TTest
-    Assert As Object
-    Fakes As Object
+    Assert As Object                    ' Rubberduck.AssertClass
+    Fakes As Object                     ' Rubberduck.FakesProvider
     ScrFileSystem As Object             ' Scripting.FileSystemObject
     VbaFileSystem As FileSystemObject   ' VBA.FileSystemObject
     TestFolderPath As String            ' Path to a folder created for these tests.

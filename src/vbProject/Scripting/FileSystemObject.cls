@@ -37,6 +37,11 @@ Attribute VB_Exposed = False
 '' ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ '
 Option Explicit
 
+
+' --------------------------------------------- '
+' Public Enums
+' --------------------------------------------- '
+
 Public Enum IOMode
     ForReading = 1
     ForWriting = 2
@@ -174,7 +179,6 @@ End Sub
 Public Sub CreateFolder(ByVal FolderName As String)
     If FolderName = vbNullString Then Err.Raise 5, , "Invalid procedure call or argument"
     If Me.FolderExists(FolderName) Then Err.Raise 58, , "File already exists."
-    
     
     ' Recursively create the parent folder (if it doesn't already exist).
     If Not Me.FolderExists(Me.GetParentFolderName(FolderName)) Then Me.CreateFolder Me.GetParentFolderName(FolderName)
@@ -377,7 +381,7 @@ End Function
 ' @return {File}
 ''
 Public Function GetFile(ByVal FileSpec As String) As Object
-    ' TEMP
+    ' TEMP - Need to build `File` class for native implementation.
     Dim fso_Object As Object
     Set fso_Object = CreateObject("Scripting.FileSystemObject")
     Set GetFile = fso_Object.GetFile(FileSpec)
@@ -442,7 +446,7 @@ End Function
 ' @return {String}
 ''
 Public Function GetFolder(ByVal FolderSpec As String) As Object
-    ' TEMP
+    ' TEMP - Need to build `Folder` class for native implementation.
     If Not Me.FolderExists(FolderSpec) Then
         Debug.Print "Raise Error Here"
     End If
