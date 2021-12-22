@@ -18,6 +18,8 @@ Private Type TTest
     Fakes As Object
     ScrFileSystem As Object             ' Scripting.FileSystemObject
     VbaFileSystem As FileSystemObject   ' VBA.FileSystemObject
+    TestFolderPath As String            ' Path to a folder created for these tests.
+    TestFilePath As String              ' Path to a .txt file created for these tests.
 End Type
 
 Private This As TTest
@@ -128,6 +130,43 @@ Private Sub FileExists_Folder()
     This.Assert.AreEqual This.ScrFileSystem.FileExists(This.TestFolderPath), This.VbaFileSystem.FileExists(This.TestFolderPath)
 End Sub
 
+' --------------------------------------------- '
+' FolderExists
+' --------------------------------------------- '
+
+'@testmethod FileSystem.FolderExists
+Private Sub FolderExists_EmptyString()
+    This.Assert.AreEqual This.ScrFileSystem.FolderExists(vbNullString), This.VbaFileSystem.FolderExists(vbNullString)
+End Sub
+'@testmethod FileSystem.FolderExists
+Private Sub FolderExists_True()
+    This.Assert.AreEqual This.ScrFileSystem.FolderExists(This.TestFolderPath), This.VbaFileSystem.FolderExists(This.TestFolderPath)
+End Sub
+'@testmethod FileSystem.FolderExists
+Private Sub FolderExists_False()
+    This.Assert.AreEqual This.ScrFileSystem.FolderExists("C:\Users\JohnDoe\Documents"), This.VbaFileSystem.FolderExists("C:\Users\JohnDoe\Documents")
+End Sub
+'@testmethod FileSystem.FolderExists
+Private Sub FolderExists_RelativePath()
+    Dim test_RelPath As String
+    test_RelPath = This.ScrFileSystem.BuildPath("..", This.ScrFileSystem.GetBaseName(This.TestFolderPath))
+    This.Assert.AreEqual This.ScrFileSystem.FolderExists(test_RelPath), This.VbaFileSystem.FolderExists(test_RelPath)
+End Sub
+'@testmethod FileSystem.FolderExists
+Private Sub FolderExists_InvalidPath()
+    This.Assert.AreEqual This.ScrFileSystem.FolderExists("Hello World"), This.VbaFileSystem.FolderExists("Hello World")
+End Sub
+'@testmethod FileSystem.FolderExists
+Private Sub FolderExists_EndWithFileSeparator()
+    This.Assert.AreEqual This.ScrFileSystem.FolderExists(This.TestFolderPath & Application.PathSeparator), This.VbaFileSystem.FolderExists(This.TestFolderPath & Application.PathSeparator)
+End Sub
+'@testmethod FileSystem.FolderExists
+Private Sub FolderExists_FileSeparatorForwardslash()
+    This.Assert.AreEqual This.ScrFileSystem.FolderExists(VBA.Replace(This.TestFolderPath, "\", "/")), This.VbaFileSystem.FolderExists(VBA.Replace(This.TestFolderPath, "\", "/"))
+End Sub
+'@testmethod FileSystem.FolderExists
+Private Sub FolderExists_File()
+    This.Assert.AreEqual This.ScrFileSystem.FolderExists(This.TestFilePath), This.VbaFileSystem.FolderExists(This.TestFilePath)
 End Sub
 
 ' --------------------------------------------- '
@@ -230,6 +269,33 @@ Private Sub speedtest_FileExists()
     
     This.Assert.Inconclusive "SCR=" & test_ScrMs & "ms | VBA=" & test_VbaMS & "ms | " & VBA.IIf(test_VbaMS > test_ScrMs, "Scripting", "VBA") & " is " & VBA.Round(VBA.IIf(test_VbaMS > test_ScrMs, test_VbaMS / test_ScrMs, test_ScrMs / test_VbaMS), 4) & " times faster."
 End Sub
+'@testmethod FileSystem.SpeedTest
+Private Sub speedtest_FolderExists()
+    Dim test_Temp As Boolean
+    Dim test_Long As Long
+    Dim test_StartTime As Date
+    Dim test_FinishTime As Date
+    Dim test_VbaMS As Double
+    Dim test_ScrMs As Double
+    
+    test_StartTime = VBA.Date + CDate(VBA.Timer / 86400)
+    For test_Long = 1 To 25000
+        test_Temp = This.ScrFileSystem.FolderExists("C:\Users\JohnDoe\Documents") ' False
+        test_Temp = This.ScrFileSystem.FolderExists(This.TestFolderPath) ' True
+    Next test_Long
+    test_FinishTime = VBA.Date + CDate(VBA.Timer / 86400)
+    test_ScrMs = VBA.Round((test_FinishTime - test_StartTime) * 86400 * 1000, 4)
+    
+    test_StartTime = VBA.Date + CDate(VBA.Timer / 86400)
+    For test_Long = 1 To 25000
+        test_Temp = This.VbaFileSystem.FolderExists("C:\Users\JohnDoe\Documents") ' False
+        test_Temp = This.VbaFileSystem.FolderExists(This.TestFolderPath) ' True
+    Next test_Long
+    test_FinishTime = VBA.Date + CDate(VBA.Timer / 86400)
+    test_VbaMS = VBA.Round((test_FinishTime - test_StartTime) * 86400 * 1000, 4)
+    
+    This.Assert.Inconclusive "SCR=" & test_ScrMs & "ms | VBA=" & test_VbaMS & "ms | " & VBA.IIf(test_VbaMS > test_ScrMs, "Scripting", "VBA") & " is " & VBA.Round(VBA.IIf(test_VbaMS > test_ScrMs, test_VbaMS / test_ScrMs, test_ScrMs / test_VbaMS), 4) & " times faster."
+End Sub
 ' ============================================= '
 ' Initialize & Terminate Methods
 ' ============================================= '
@@ -251,12 +317,18 @@ Private Sub ModuleInitialize()
         Set .Fakes = CreateObject("Rubberduck.FakesProvider")
         Set .ScrFileSystem = CreateObject("Scripting.FileSystemObject")
         Set .VbaFileSystem = New FileSystemObject
+        .TestFolderPath = .ScrFileSystem.BuildPath(ThisWorkbook.Path, "TestsFolder")
+        .TestFilePath = .ScrFileSystem.BuildPath(.TestFolderPath, "TestFile.txt")
+        If Not .ScrFileSystem.FolderExists(.TestFolderPath) Then .ScrFileSystem.CreateFolder .TestFolderPath
+        If Not .ScrFileSystem.FileExists(.TestFilePath) Then .ScrFileSystem.CreateTextFile .TestFilePath
     End With
 End Sub
 
 '@ModuleCleanup
 Private Sub ModuleCleanup()
     With This
+        If .ScrFileSystem.FolderExists(.TestFolderPath) Then .ScrFileSystem.DeleteFolder (.TestFolderPath)
+        If .ScrFileSystem.FileExists(.TestFilePath) Then .ScrFileSystem.DeleteFile (.TestFilePath)
         Set .Assert = Nothing
         Set .Fakes = Nothing
         Set .ScrFileSystem = Nothing
