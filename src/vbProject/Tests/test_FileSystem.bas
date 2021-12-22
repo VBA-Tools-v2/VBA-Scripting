@@ -234,7 +234,40 @@ End Sub
 Private Sub GetDriveName_InvalidDriveSpec()
     This.Assert.AreEqual This.ScrFileSystem.GetDriveName("D\"), This.VbaFileSystem.GetDriveName("D\")
 End Sub
+
+' --------------------------------------------- '
+' GetExtensionName
+' --------------------------------------------- '
+
+'@testmethod FileSystem.GetExtensionName
+Private Sub GetExtensionName_EmptyString()
+    This.Assert.AreEqual This.ScrFileSystem.GetExtensionName(vbNullString), This.VbaFileSystem.GetExtensionName(vbNullString)
 End Sub
+'@testmethod FileSystem.GetExtensionName
+Private Sub GetExtensionName_NoFileExtension()
+    This.Assert.AreEqual This.ScrFileSystem.GetExtensionName("C:\Users\JohnDoe\Documents\Hello World"), This.VbaFileSystem.GetExtensionName("C:\Users\JohnDoe\Documents\Hello World")
+End Sub
+'@testmethod FileSystem.GetExtensionName
+Private Sub GetExtensionName_NoPathSeparator()
+    This.Assert.AreEqual This.ScrFileSystem.GetExtensionName("Hello World.txt"), This.VbaFileSystem.GetExtensionName("Hello World.txt")
+End Sub
+'@testmethod FileSystem.GetExtensionName
+Private Sub GetExtensionName_MultipleExtensions()
+    This.Assert.AreEqual This.ScrFileSystem.GetExtensionName("C:\Users\JohnDoe\Documents\Hello World.backup.txt"), This.VbaFileSystem.GetExtensionName("C:\Users\JohnDoe\Documents\Hello World.backup.txt")
+End Sub
+'@testmethod FileSystem.GetExtensionName
+Private Sub GetExtensionName_PathSeparatedExtensions()
+    This.Assert.AreEqual This.ScrFileSystem.GetExtensionName("C:\Users\JohnDoe\Documents\Hello.txt\World.exe"), This.VbaFileSystem.GetExtensionName("C:\Users\JohnDoe\Documents\Hello.txt\World.exe")
+End Sub
+'@testmethod FileSystem.GetExtensionName
+Private Sub GetExtensionName_NoExtensionInLastPathComponent()
+    This.Assert.AreEqual This.ScrFileSystem.GetExtensionName("C:\Users\JohnDoe\Documents\Hello.txt\World"), This.VbaFileSystem.GetExtensionName("C:\Users\JohnDoe\Documents\Hello.txt\World")
+End Sub
+'@testmethod FileSystem.GetExtensionName
+Private Sub GetExtensionName_EndWithFileSeparator()
+    This.Assert.AreEqual This.ScrFileSystem.GetExtensionName("C:\Users\JohnDoe\Documents\"), This.VbaFileSystem.GetExtensionName("C:\Users\JohnDoe\Documents\")
+End Sub
+
 ' --------------------------------------------- '
 ' Speed Tests
 ' --------------------------------------------- '
@@ -362,6 +395,31 @@ Private Sub speedtest_GetDriveName()
     test_StartTime = VBA.Date + CDate(VBA.Timer / 86400)
     For test_Long = 1 To 1000000
         test_Temp = This.VbaFileSystem.GetDriveName("C:\Users\JohnDoe\Documents\Hello World.txt")
+    Next test_Long
+    test_FinishTime = VBA.Date + CDate(VBA.Timer / 86400)
+    test_VbaMS = VBA.Round((test_FinishTime - test_StartTime) * 86400 * 1000, 4)
+    
+    This.Assert.Inconclusive "SCR=" & test_ScrMs & "ms | VBA=" & test_VbaMS & "ms | " & VBA.IIf(test_VbaMS > test_ScrMs, "Scripting", "VBA") & " is " & VBA.Round(VBA.IIf(test_VbaMS > test_ScrMs, test_VbaMS / test_ScrMs, test_ScrMs / test_VbaMS), 4) & " times faster."
+End Sub
+'@testmethod FileSystem.SpeedTest
+Private Sub speedtest_GetExtensionName()
+    Dim test_Temp As String
+    Dim test_Long As Long
+    Dim test_StartTime As Date
+    Dim test_FinishTime As Date
+    Dim test_VbaMS As Double
+    Dim test_ScrMs As Double
+    
+    test_StartTime = VBA.Date + CDate(VBA.Timer / 86400)
+    For test_Long = 1 To 1000000
+        test_Temp = This.ScrFileSystem.GetExtensionName("C:\Users\JohnDoe\Documents\Hello World.txt")
+    Next test_Long
+    test_FinishTime = VBA.Date + CDate(VBA.Timer / 86400)
+    test_ScrMs = VBA.Round((test_FinishTime - test_StartTime) * 86400 * 1000, 4)
+    
+    test_StartTime = VBA.Date + CDate(VBA.Timer / 86400)
+    For test_Long = 1 To 1000000
+        test_Temp = This.VbaFileSystem.GetExtensionName("C:\Users\JohnDoe\Documents\Hello World.txt")
     Next test_Long
     test_FinishTime = VBA.Date + CDate(VBA.Timer / 86400)
     test_VbaMS = VBA.Round((test_FinishTime - test_StartTime) * 86400 * 1000, 4)
