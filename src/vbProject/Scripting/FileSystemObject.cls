@@ -37,6 +37,21 @@ Attribute VB_Exposed = False
 '' ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ '
 Option Explicit
 
+' --------------------------------------------- '
+' Constants and Private Variables
+' --------------------------------------------- '
+
+#Const UseScriptingFileSystemObjectIfAvailable = False
+
+#If Not Mac And UseScriptingFileSystemObjectIfAvailable Then
+
+Private Type TFileSystemObject
+    FileSystemObject As Object
+End Type
+
+Private This As TFileSystemObject
+
+#End If
 
 ' --------------------------------------------- '
 ' Public Enums
@@ -83,6 +98,7 @@ End Enum
 ' @return {String}
 ''
 Public Function BuildPath(Path As String, Name As String) As String
+#If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
     Dim fso_Separator As String
 
     ' Check path for valid sepatator first. If one is not found, check the Name.
@@ -117,6 +133,8 @@ Public Function BuildPath(Path As String, Name As String) As String
             BuildPath = BuildPath & Name
         End Select
     End If
+#Else
+    BuildPath = This.FileSystemObject.BuildPath(Path, Name)
 #End If
 End Function
 
@@ -136,6 +154,7 @@ End Function
 '                              Note that CopyFile will fail if destination has the read-only attribute set, regardless of the value of overwrite.
 ''
 Public Sub CopyFile(ByVal Source As String, ByVal Destination As String, Optional ByVal Overwrite As Boolean = True)
+#If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
     Dim fso_Source As String
     Dim fso_Destination As String
     
@@ -161,6 +180,9 @@ Public Sub CopyFile(ByVal Source As String, ByVal Destination As String, Optiona
     
     ' Copy file.
     VBA.FileCopy Source, fso_Destination
+#Else
+    This.FileSystemObject.CopyFile Source, Destination, Overwrite
+#End If
 End Sub
 
 'TODO - CopyFolder.
@@ -177,6 +199,7 @@ End Sub
 ' @param {String} FolderName | String expression that identifies the folder to create.
 ''
 Public Sub CreateFolder(ByVal FolderName As String)
+#If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
     If FolderName = vbNullString Then Err.Raise 5, , "Invalid procedure call or argument"
     If Me.FolderExists(FolderName) Then Err.Raise 58, , "File already exists."
     
@@ -185,6 +208,12 @@ Public Sub CreateFolder(ByVal FolderName As String)
     
     ' Create folder target folder.
     VBA.MkDir FolderName
+#Else
+    ' Recursively create the parent folder (if it doesn't already exist).
+    If Not Me.FolderExists(Me.GetParentFolderName(FolderName)) Then Me.CreateFolder Me.GetParentFolderName(FolderName)
+    
+    This.FileSystemObject.CreateFolder FolderName
+#End If
 End Sub
 
 ''
@@ -197,6 +226,7 @@ End Sub
 ' @return {TextStream}
 ''
 Public Function CreateTextFile(ByVal FileName As String, Optional ByVal Overwrite As Boolean = True, Optional ByVal Unicode As Boolean = False) As TextStream
+#If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
     If Not Overwrite Then
         If Me.FileExists(FileName) Then Err.Raise 58, , "File already exists"
     Else
@@ -206,6 +236,9 @@ Public Function CreateTextFile(ByVal FileName As String, Optional ByVal Overwrit
     Set fso_TextStream = New TextStream
     fso_TextStream.OpenFile FileName, ForWriting, VBA.IIf(Unicode, TristateTrue, TristateFalse)
     Set CreateTextFile = fso_TextStream
+#Else
+    Set CreateTextFile = This.FileSystemObject.CreateTextFile(FileName, Overwrite, Unicode)
+#End If
 End Function
 
 ''
@@ -219,12 +252,16 @@ End Function
 ' @param {Boolean} Force | Optional. Boolean value that is True if folders with the read-only attribute set are to be deleted; False (default) if they are not.
 ''
 Public Sub DeleteFile(ByVal FileSpec As String, Optional ByVal Force As Boolean = False)
+#If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
     ' Skip if Force = False and file is read-only.
     If Not Force And (VBA.GetAttr(FileSpec) And vbReadOnly) > 0 Then
         Exit Sub
     End If
     
     VBA.Kill FileSpec
+#Else
+    This.FileSystemObject.DeleteFile FileSpec, Force
+#End If
 End Sub
 
 ''
@@ -238,6 +275,7 @@ End Sub
 ' @param {Boolean} Force | Optional. Boolean value that is True if folders with the read-only attribute set are to be deleted; False (default) if they are not.
 ''
 Public Sub DeleteFolder(ByVal FolderSpec As String, Optional ByVal Force As Boolean = False)
+#If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
     On Error GoTo fso_ErrorHandling
     
     Dim fso_Folder As String
@@ -277,6 +315,9 @@ fso_FixDir:
     Resume Next
 fso_ErrorHandling:
     Err.Raise Err.Number, Err.Source, Err.Description
+#Else
+    This.FileSystemObject.DeleteFolder FolderSpec, Force
+#End If
 End Sub
 
 ''
@@ -290,8 +331,12 @@ End Sub
 ' @return {Boolean}
 ''
 Public Function FileExists(FileSpec As String) As Boolean
+#If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
     If FileSpec = vbNullString Or VBA.Right$(FileSpec, 1) = "/" Or VBA.Right$(FileSpec, 1) = "\" Then Exit Function ' Return False if passed `FileSpec` that is blank or ending in file separator.
     FileExists = Not VBA.Dir(FileSpec) = vbNullString
+#Else
+    FileExists = This.FileSystemObject.FileExists(FileSpec)
+#End If
 End Function
 
 ''
@@ -305,8 +350,12 @@ End Function
 ' @return {Boolean}
 ''
 Public Function FolderExists(FolderSpec As String) As Boolean
+#If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
     If FolderSpec = vbNullString Or VBA.InStr(FolderSpec, ".") Then Exit Function ' Return False if passed `FolderSpec` that is blank or containing a file extension.
     FolderExists = Not (VBA.Dir(FolderSpec, vbDirectory) = vbNullString)
+#Else
+    FolderExists = This.FileSystemObject.FolderExists(FolderSpec)
+#End If
 End Function
 
 ''
@@ -320,6 +369,7 @@ End Function
 ' @return {String}
 ''
 Public Function GetBaseName(Path As String) As String
+#If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
     ' Get last component in path.
     GetBaseName = Me.GetFileName(Path)
     
@@ -327,6 +377,9 @@ Public Function GetBaseName(Path As String) As String
     If VBA.InStr(GetBaseName, ".") <> 0 Then
         GetBaseName = VBA.Mid$(GetBaseName, 1, VBA.InStrRev(GetBaseName, ".") - 1)
     End If
+#Else
+    GetBaseName = This.FileSystemObject.GetBaseName(Path)
+#End If
 End Function
 
 ''
@@ -340,12 +393,16 @@ End Function
 ' @return {String}
 ''
 Public Function GetDriveName(Path As String) As String
+#If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
     If VBA.Len(Path) >= 2 Then
         ' ASCII Codes: `A`=65 | `Z`=90
         If VBA.Asc(Path) >= 65 And VBA.Asc(Path) <= 90 And VBA.Mid$(Path, 2, 1) = ":" Then
             GetDriveName = VBA.Left$(Path, 2)
         End If
     End If
+#Else
+    GetDriveName = This.FileSystemObject.GetDriveName(Path)
+#End If
 End Function
 
 ''
@@ -359,6 +416,7 @@ End Function
 ' @return {String}
 ''
 Public Function GetExtensionName(Path As String) As String
+#If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
     ' Get last component in path.
     GetExtensionName = Me.GetFileName(Path)
 
@@ -368,6 +426,9 @@ Public Function GetExtensionName(Path As String) As String
     Else
         GetExtensionName = vbNullString
     End If
+#Else
+    GetExtensionName = This.FileSystemObject.GetExtensionName(Path)
+#End If
 End Function
 
 ''
@@ -398,6 +459,7 @@ End Function
 ' @return {String}
 ''
 Public Function GetFileName(PathSpec As String) As String
+#If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
     ' Variables.
     Dim fso_Backslash As Long
     Dim fso_Forwardslash As Long
@@ -433,6 +495,9 @@ Public Function GetFileName(PathSpec As String) As String
     Else ' Both separators, use last one in path.
         GetFileName = VBA.Mid$(GetFileName, VBA.IIf(fso_Backslash > fso_Forwardslash, fso_Backslash, fso_Forwardslash) + 1)
     End If
+#Else
+    PathSpec = This.FileSystemObject.GetFileName(PathSpec)
+#End If
 End Function
 
 ''
@@ -467,11 +532,15 @@ End Function
 ' @return {String}
 ''
 Public Function GetParentFolderName(ByVal Path As String) As String
+#If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
     If VBA.InStr(Path, "/") Then
         GetParentFolderName = VBA.Mid$(Path, 1, VBA.InStrRev(Path, "/") - 1)
     ElseIf VBA.InStr(Path, "\") Then
         GetParentFolderName = VBA.Mid$(Path, 1, VBA.InStrRev(Path, "\") - 1)
     End If
+#Else
+    GetParentFolderName = This.FileSystemObject.GetParentFolderName(Path)
+#End If
 End Function
 
 ''
@@ -505,6 +574,7 @@ End Sub
 ' @return {TextStream}
 ''
 Public Function OpenTextFile(ByVal FileName As String, Optional ByVal Mode As IOMode, Optional ByVal Create As Boolean = False, Optional ByVal Format As Tristate = Tristate.TristateFalse) As TextStream
+#If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
     If Not Create Then
         If Not Me.FileExists(FileName) Then Err.Raise 53, , "File not found"
     End If
@@ -512,4 +582,24 @@ Public Function OpenTextFile(ByVal FileName As String, Optional ByVal Mode As IO
     Set fso_TextStream = New TextStream
     fso_TextStream.OpenFile FileName, Mode, Format
     Set OpenTextFile = fso_TextStream
+#Else
+    Set OpenTextFile = This.FileSystemObject.OpenTextFile(FileName, Mode, Create, Format)
+#End If
 End Function
+
+
+' ============================================= '
+' Initialize & Terminate Methods
+' ============================================= '
+
+Private Sub Class_Terminate()
+#If Not Mac And UseScriptingFileSystemObjectIfAvailable Then
+    Set This.FileSystemObject = Nothing
+#End If
+End Sub
+
+Private Sub Class_Initialize()
+#If Not Mac And UseScriptingFileSystemObjectIfAvailable Then
+    Set This.FileSystemObject = CreateObject("Scripting.FileSystemObject")
+#End If
+End Sub
