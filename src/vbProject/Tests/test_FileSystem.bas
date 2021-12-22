@@ -206,6 +206,34 @@ Private Sub GetBaseName_DriveSpecOnly()
     This.Assert.AreEqual This.ScrFileSystem.GetBaseName("C:\"), This.VbaFileSystem.GetBaseName("C:\")
 End Sub
 
+' --------------------------------------------- '
+' GetDriveName
+' --------------------------------------------- '
+
+'@testmethod FileSystem.GetDriveName
+Private Sub GetDriveName_EmptyString()
+    This.Assert.AreEqual This.ScrFileSystem.GetDriveName(vbNullString), This.VbaFileSystem.GetDriveName(vbNullString)
+End Sub
+'@testmethod FileSystem.GetDriveName
+Private Sub GetDriveName_AbsolutePath()
+    This.Assert.AreEqual This.ScrFileSystem.GetDriveName("C:\Users\JohnDoe\Documents\"), This.VbaFileSystem.GetDriveName("C:\Users\JohnDoe\Documents\")
+End Sub
+'@testmethod FileSystem.GetDriveName
+Private Sub GetDriveName_RelativePath()
+    This.Assert.AreEqual This.ScrFileSystem.GetDriveName("..\JohnDoe\Documents\"), This.VbaFileSystem.GetDriveName("..\JohnDoe\Documents\")
+End Sub
+'@testmethod FileSystem.GetDriveName
+Private Sub GetDriveName_NoFileSeparator()
+    This.Assert.AreEqual This.ScrFileSystem.GetDriveName("Hello World.txt"), This.VbaFileSystem.GetDriveName("Hello World.txt")
+End Sub
+'@testmethod FileSystem.GetDriveName
+Private Sub GetDriveName_ValidDriveSpecNoSeparator()
+    This.Assert.AreEqual This.ScrFileSystem.GetDriveName("C:HelloWorld"), This.VbaFileSystem.GetDriveName("C:HelloWorld")
+End Sub
+'@testmethod FileSystem.GetDriveName
+Private Sub GetDriveName_InvalidDriveSpec()
+    This.Assert.AreEqual This.ScrFileSystem.GetDriveName("D\"), This.VbaFileSystem.GetDriveName("D\")
+End Sub
 End Sub
 ' --------------------------------------------- '
 ' Speed Tests
@@ -284,6 +312,31 @@ Private Sub speedtest_FolderExists()
     For test_Long = 1 To 25000
         test_Temp = This.VbaFileSystem.FolderExists("C:\Users\JohnDoe\Documents") ' False
         test_Temp = This.VbaFileSystem.FolderExists(This.TestFolderPath) ' True
+    Next test_Long
+    test_FinishTime = VBA.Date + CDate(VBA.Timer / 86400)
+    test_VbaMS = VBA.Round((test_FinishTime - test_StartTime) * 86400 * 1000, 4)
+    
+    This.Assert.Inconclusive "SCR=" & test_ScrMs & "ms | VBA=" & test_VbaMS & "ms | " & VBA.IIf(test_VbaMS > test_ScrMs, "Scripting", "VBA") & " is " & VBA.Round(VBA.IIf(test_VbaMS > test_ScrMs, test_VbaMS / test_ScrMs, test_ScrMs / test_VbaMS), 4) & " times faster."
+End Sub
+'@testmethod FileSystem.SpeedTest
+Private Sub speedtest_GetDriveName()
+    Dim test_Temp As String
+    Dim test_Long As Long
+    Dim test_StartTime As Date
+    Dim test_FinishTime As Date
+    Dim test_VbaMS As Double
+    Dim test_ScrMs As Double
+    
+    test_StartTime = VBA.Date + CDate(VBA.Timer / 86400)
+    For test_Long = 1 To 1000000
+        test_Temp = This.ScrFileSystem.GetDriveName("C:\Users\JohnDoe\Documents\Hello World.txt")
+    Next test_Long
+    test_FinishTime = VBA.Date + CDate(VBA.Timer / 86400)
+    test_ScrMs = VBA.Round((test_FinishTime - test_StartTime) * 86400 * 1000, 4)
+    
+    test_StartTime = VBA.Date + CDate(VBA.Timer / 86400)
+    For test_Long = 1 To 1000000
+        test_Temp = This.VbaFileSystem.GetDriveName("C:\Users\JohnDoe\Documents\Hello World.txt")
     Next test_Long
     test_FinishTime = VBA.Date + CDate(VBA.Timer / 86400)
     test_VbaMS = VBA.Round((test_FinishTime - test_StartTime) * 86400 * 1000, 4)
