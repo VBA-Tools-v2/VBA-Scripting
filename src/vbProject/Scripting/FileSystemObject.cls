@@ -300,27 +300,9 @@ End Function
 ' @param {String} FolderSpec | The name of the folder whose existence is to be determined.
 ' @return {Boolean}
 ''
-Public Function FolderExists(ByVal FolderSpec As String) As Boolean
-    Dim fso_Folder As String
-    fso_Folder = FolderSpec
-    FolderExists = False
-    
-    If Not (VBA.Right$(fso_Folder, 1) = "/") And Not (VBA.Right$(fso_Folder, 1) = "\") And Not (VBA.Right$(fso_Folder, 1) = ":") Then
-        If VBA.InStr(fso_Folder, "/") > 0 Then
-            fso_Folder = fso_Folder & "/"
-        ElseIf VBA.InStr(fso_Folder, "\") > 0 Then
-            fso_Folder = fso_Folder & "\"
-        ElseIf VBA.InStr(fso_Folder, ":") > 0 Then
-            fso_Folder = fso_Folder & ":"
-        Else
-            FolderExists = False
-            Exit Function
-        End If
-    End If
-    
-    If VBA.Len(VBA.Dir(fso_Folder, vbDirectory)) > 0 Then
-        FolderExists = True
-    End If
+Public Function FolderExists(FolderSpec As String) As Boolean
+    If FolderSpec = vbNullString Or VBA.InStr(FolderSpec, ".") Then Exit Function ' Return False if passed `FolderSpec` that is blank or containing a file extension.
+    FolderExists = Not (VBA.Dir(FolderSpec, vbDirectory) = vbNullString)
 End Function
 
 ''
