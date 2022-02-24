@@ -97,7 +97,7 @@ End Enum
 ' @param {String} Name | Name of a folder or file being appended to the existing `Path`.
 ' @return {String}
 ''
-Public Function BuildPath(Path As String, Name As String) As String
+Public Function BuildPath(ByVal Path As String, ByVal Name As String) As String
 #If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
     Dim fso_Separator As String
 
@@ -330,7 +330,7 @@ End Sub
 ' @param {String} FileSpec | The name of the file whose existence is to be determined.
 ' @return {Boolean}
 ''
-Public Function FileExists(FileSpec As String) As Boolean
+Public Function FileExists(ByVal FileSpec As String) As Boolean
 #If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
     If FileSpec = vbNullString Or VBA.Right$(FileSpec, 1) = "/" Or VBA.Right$(FileSpec, 1) = "\" Then Exit Function ' Return False if passed `FileSpec` that is blank or ending in file separator.
     FileExists = Not VBA.Dir(FileSpec) = vbNullString
@@ -349,7 +349,7 @@ End Function
 ' @param {String} FolderSpec | The name of the folder whose existence is to be determined.
 ' @return {Boolean}
 ''
-Public Function FolderExists(FolderSpec As String) As Boolean
+Public Function FolderExists(ByVal FolderSpec As String) As Boolean
 #If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
     If FolderSpec = vbNullString Or VBA.InStr(FolderSpec, ".") Then Exit Function ' Return False if passed `FolderSpec` that is blank or containing a file extension.
     FolderExists = Not (VBA.Dir(FolderSpec, vbDirectory) = vbNullString)
@@ -368,7 +368,7 @@ End Function
 ' @param {String} Path | The path specification for the component whose base name is to be returned.
 ' @return {String}
 ''
-Public Function GetBaseName(Path As String) As String
+Public Function GetBaseName(ByVal Path As String) As String
 #If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
     ' Get last component in path.
     GetBaseName = Me.GetFileName(Path)
@@ -392,7 +392,7 @@ End Function
 ' @param {String} Path | The path specification for the component whose drive name is to be returned.
 ' @return {String}
 ''
-Public Function GetDriveName(Path As String) As String
+Public Function GetDriveName(ByVal Path As String) As String
 #If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
     If VBA.Len(Path) >= 2 Then
         ' ASCII Codes: `A`=65 | `Z`=90
@@ -415,7 +415,7 @@ End Function
 ' @param {String} Path | The path specification for the component whose extension name is to be returned.
 ' @return {String}
 ''
-Public Function GetExtensionName(Path As String) As String
+Public Function GetExtensionName(ByVal Path As String) As String
 #If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
     ' Get last component in path.
     GetExtensionName = Me.GetFileName(Path)
@@ -458,7 +458,7 @@ End Function
 ' @param {String} PathSpec | The path (absolute or relative) to a specific file.
 ' @return {String}
 ''
-Public Function GetFileName(PathSpec As String) As String
+Public Function GetFileName(ByVal PathSpec As String) As String
 #If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
     ' Variables.
     Dim fso_Backslash As Long
