@@ -295,7 +295,7 @@ Public Sub DeleteFolder(ByVal FolderSpec As String, Optional ByVal Force As Bool
     On Error GoTo fso_ErrorHandling
     
     ' Recursively loop through all folders and delete contents.
-    fso_Folder = VBA.Dir(BuildPath(FolderSpec, vbNullString), vbDirectory)
+    fso_Folder = VBA.Dir(BuildPath(FolderSpec, Application.PathSeparator), vbDirectory)
     Do While Not fso_Folder = vbNullString
         On Error GoTo fso_FixDir
             fso_Folder = VBA.Dir()
@@ -311,7 +311,7 @@ Public Sub DeleteFolder(ByVal FolderSpec As String, Optional ByVal Force As Bool
     Exit Sub
     
 fso_FixDir:
-    fso_Folder = VBA.Dir(BuildPath(FolderSpec, vbNullString), vbDirectory)
+    fso_Folder = VBA.Dir(BuildPath(FolderSpec, Application.PathSeparator), vbDirectory)
     Resume Next
 fso_ErrorHandling:
     Err.Raise Err.Number, Err.Source, Err.Description
