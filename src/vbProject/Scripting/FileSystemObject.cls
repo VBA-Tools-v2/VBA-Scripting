@@ -566,10 +566,12 @@ End Function
 ' @param {String} Destination | The path where the file or files are to be moved. The destination argument can't contain wildcard characters.
 ''
 Public Sub MoveFile(ByVal Source As String, ByVal Destination As String)
-    ' TEMP
-    Dim fso_Object As Object
-    Set fso_Object = CreateObject("Scripting.FileSystemObject")
-    fso_Object.MoveFile Source, Destination
+#If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
+    ' TODO - Validate `Source` and `Destination` parameters.
+    Name Source As Destination
+#Else
+    This.FileSystemObject.MoveFile Source, Destination
+#End If
 End Sub
 
 ''
