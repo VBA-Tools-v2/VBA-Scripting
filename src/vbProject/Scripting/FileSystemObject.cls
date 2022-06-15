@@ -184,7 +184,23 @@ Public Sub CopyFile(ByVal Source As String, ByVal Destination As String, Optiona
 #End If
 End Sub
 
-'TODO - CopyFolder.
+''
+' VBA implementation of FileSystemObject `CopyFolder` method.
+' https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/copyfolder-method
+'
+' Recursively copies a folder from one location to another.
+'
+' @method CopyFolder
+' @param {String} Source | Character string folder specification, which can include wildcard characters, for one or more folders to be copied.
+' @param {String} Destination | Character string destination where the folder and subfolders from source are to be copied. Wildcard characters are not allowed.
+' @param {Boolean} Overwrite | Optional. Boolean value that indicates if existing folders are to be overwritten. If True, files are overwritten; if False, they are not. The default is True.
+''
+Public Sub CopyFolder(ByVal Source As String, ByVal Destination As String, Optional ByVal Overwrite As Boolean = True)
+    ' TEMP
+    Dim fso_Object As Object
+    Set fso_Object = CreateObject("Scripting.FileSystemObject")
+    fso_Object.CopyFolder Source, Destination, Overwrite
+End Sub
 
 ''
 ' VBA implementation of FileSystemObject `CreateFolder` method.
