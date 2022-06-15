@@ -149,8 +149,7 @@ End Function
 ' @method BuildPath
 ' @param {String} Source | Character string file specification, for the file to be copied.
 ' @param {String} Destination | Character string destination where the file or files from source are to be copied.
-' @param {Boolean} Overwrite | Optional. Boolean value that indicates if existing files are to be overwritten.
-'                              If True, files are overwritten; if False, they are not. The default is True.
+' @param {Boolean} Overwrite | Optional. Boolean value that indicates if existing files are to be overwritten. If True, files are overwritten; if False, they are not. The default is True.
 '                              Note that CopyFile will fail if destination has the read-only attribute set, regardless of the value of overwrite.
 ''
 Public Sub CopyFile(ByVal Source As String, ByVal Destination As String, Optional ByVal Overwrite As Boolean = True)
@@ -280,38 +279,35 @@ Public Sub DeleteFolder(ByVal FolderSpec As String, Optional ByVal Force As Bool
     
     Dim fso_Folder As String
     
-    If Not FolderExists(FolderSpec) Then Exit Sub
+    If Not Me.FolderExists(FolderSpec) Then Exit Sub
     
     ' Skip if Force = False and folder is read-only.
     If Not Force And (VBA.GetAttr(FolderSpec) And vbReadOnly) > 0 Then
-        'Debug.Print "Skipping Read-Only folder: " & FolderSpec
         Exit Sub
     End If
     
     ' Delete all files.
     On Error Resume Next ' Ignore error if no files in folder.
-        'Debug.Print "Deleting files: " & BuildPath(FolderSpec, "*.*")
-        VBA.Kill BuildPath(FolderSpec, "*.*")
+        VBA.Kill Me.BuildPath(FolderSpec, "*.*")
     On Error GoTo fso_ErrorHandling
     
     ' Recursively loop through all folders and delete contents.
-    fso_Folder = VBA.Dir(BuildPath(FolderSpec, Application.PathSeparator), vbDirectory)
+    fso_Folder = VBA.Dir(Me.BuildPath(FolderSpec, Application.PathSeparator), vbDirectory)
     Do While Not fso_Folder = vbNullString
         On Error GoTo fso_FixDir
             fso_Folder = VBA.Dir()
         On Error GoTo fso_ErrorHandling
         If Not (fso_Folder = "." Or fso_Folder = ".." Or fso_Folder = vbNullString) Then
-            DeleteFolder BuildPath(FolderSpec, fso_Folder), Force
+            DeleteFolder Me.BuildPath(FolderSpec, fso_Folder), Force
         End If
     Loop
     
-    'Debug.Print "Deleting folder: " & FolderSpec
     VBA.RmDir FolderSpec
     
     Exit Sub
     
 fso_FixDir:
-    fso_Folder = VBA.Dir(BuildPath(FolderSpec, Application.PathSeparator), vbDirectory)
+    fso_Folder = VBA.Dir(Me.BuildPath(FolderSpec, Application.PathSeparator), vbDirectory)
     Resume Next
 fso_ErrorHandling:
     Err.Raise Err.Number, Err.Source, Err.Description
@@ -586,7 +582,6 @@ Public Function OpenTextFile(ByVal FileName As String, Optional ByVal Mode As IO
     Set OpenTextFile = This.FileSystemObject.OpenTextFile(FileName, Mode, Create, Format)
 #End If
 End Function
-
 
 ' ============================================= '
 ' Initialize & Terminate Methods
