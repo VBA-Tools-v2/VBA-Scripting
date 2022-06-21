@@ -168,6 +168,12 @@ End Sub
 Private Sub FolderExists_File()
     This.Assert.AreEqual This.ScrFileSystem.FolderExists(This.TestFilePath), This.VbaFileSystem.FolderExists(This.TestFilePath)
 End Sub
+'@testmethod FileSystem.FolderExists
+Private Sub FolderExists_NameHasPeriod()
+    This.ScrFileSystem.CreateFolder This.ScrFileSystem.BuildPath(This.TestFolderPath, "v1.0.0")
+    This.Assert.AreEqual This.ScrFileSystem.FolderExists(This.ScrFileSystem.BuildPath(This.TestFolderPath, "v1.0.0")), This.VbaFileSystem.FolderExists(This.ScrFileSystem.BuildPath(This.TestFolderPath, "v1.0.0"))
+    This.ScrFileSystem.DeleteFolder This.ScrFileSystem.BuildPath(This.TestFolderPath, "v1.0.0")
+End Sub
 
 ' --------------------------------------------- '
 ' GetBaseName
@@ -204,6 +210,14 @@ End Sub
 '@testmethod FileSystem.GetBaseName
 Private Sub GetBaseName_DriveSpecOnly()
     This.Assert.AreEqual This.ScrFileSystem.GetBaseName("C:\"), This.VbaFileSystem.GetBaseName("C:\")
+End Sub
+'@testmethod FileSystem.GetBaseName
+Private Sub GetBaseName_MultiplePeriods()
+    This.Assert.AreEqual This.ScrFileSystem.GetFileName("C:\v1.0.0.txt"), This.VbaFileSystem.GetFileName("C:\v1.0.0.txt")
+End Sub
+'@testmethod FileSystem.GetBaseName
+Private Sub GetBaseName_MultiplePeriodsNoExtension()
+    This.Assert.AreEqual This.ScrFileSystem.GetFileName("C:\v1.0.0"), This.VbaFileSystem.GetFileName("C:\v1.0.0")
 End Sub
 
 ' --------------------------------------------- '
@@ -292,7 +306,14 @@ End Sub
 Private Sub GetFileName_DriveSpecOnly()
     This.Assert.AreEqual This.ScrFileSystem.GetFileName("C:\"), This.VbaFileSystem.GetFileName("C:\")
 End Sub
-
+'@testmethod FileSystem.GetFileName
+Private Sub GetFileName_MultiplePeriods()
+    This.Assert.AreEqual This.ScrFileSystem.GetFileName("C:\v1.0.0.txt"), This.VbaFileSystem.GetFileName("C:\v1.0.0.txt")
+End Sub
+'@testmethod FileSystem.GetFileName
+Private Sub GetFileName_MultiplePeriodsNoExtension()
+    This.Assert.AreEqual This.ScrFileSystem.GetFileName("C:\v1.0.0"), This.VbaFileSystem.GetFileName("C:\v1.0.0")
+End Sub
 ' --------------------------------------------- '
 ' Speed Tests
 ' --------------------------------------------- '
