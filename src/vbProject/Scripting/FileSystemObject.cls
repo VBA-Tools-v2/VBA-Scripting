@@ -363,7 +363,7 @@ End Function
 ''
 Public Function FolderExists(ByVal FolderSpec As String) As Boolean
 #If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
-    If FolderSpec = vbNullString Or VBA.InStr(FolderSpec, ".") Then Exit Function ' Return False if passed `FolderSpec` that is blank or containing a file extension.
+    If FolderSpec = vbNullString Or Me.FileExists(FolderSpec) Then Exit Function ' Return False if passed `FolderSpec` that is blank or is a file.
     FolderExists = Not (VBA.Dir(FolderSpec, vbDirectory) = vbNullString)
 #Else
     FolderExists = This.FileSystemObject.FolderExists(FolderSpec)
