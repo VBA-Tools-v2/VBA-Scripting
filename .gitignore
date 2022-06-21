@@ -1,11 +1,6 @@
-*.xla
-*.xlam
-*.xls
-*.xlsb
-*.xlsm
-*.xlsx
-*.xlt
-*.xltm
-*.xltx
+# Ignore all Excel files.
+*.xl*
+
+# Ignore backup items.
 build/backup/
-build/BuildScript.log
+build/*.log
