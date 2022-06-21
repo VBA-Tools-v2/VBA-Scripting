@@ -363,7 +363,7 @@ End Function
 ''
 Public Function FolderExists(ByVal FolderSpec As String) As Boolean
 #If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
-    If FolderSpec = vbNullString Or VBA.InStr(FolderSpec, ".") Then Exit Function ' Return False if passed `FolderSpec` that is blank or containing a file extension.
+    If FolderSpec = vbNullString Or Me.FileExists(FolderSpec) Then Exit Function ' Return False if passed `FolderSpec` that is blank or is a file.
     FolderExists = Not (VBA.Dir(FolderSpec, vbDirectory) = vbNullString)
 #Else
     FolderExists = This.FileSystemObject.FolderExists(FolderSpec)
@@ -524,10 +524,6 @@ End Function
 ''
 Public Function GetFolder(ByVal FolderSpec As String) As Object
     ' TEMP - Need to build `Folder` class for native implementation.
-    If Not Me.FolderExists(FolderSpec) Then
-        Debug.Print "Raise Error Here"
-    End If
-    
     Dim fso_Object As Object
     Set fso_Object = CreateObject("Scripting.FileSystemObject")
     Set GetFolder = fso_Object.GetFolder(FolderSpec)
