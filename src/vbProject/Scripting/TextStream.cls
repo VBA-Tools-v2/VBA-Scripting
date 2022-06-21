@@ -324,8 +324,12 @@ Public Function ReadLine() As String
         txt_CharCount = txt_CharCount + 1
     Next txt_ColNo
     
-    This.LineNo = This.LineNo + 1
-    This.ColumnNo = 1
+    If Not This.LineNo = UBound(This.FileLines) Then
+        This.LineNo = This.LineNo + 1
+        This.ColumnNo = 1
+    Else
+        This.ColumnNo = txt_ColNo
+    End If
     
     ' Skip new line character when reading an entire line.
     ReadLine = VBA.Replace(VBA.Replace(VBA.Replace(txtstr_ByteArrayToString(txt_ReadLine), VBA.Chr$(13) & VBA.Chr$(10), vbNullString), VBA.Chr$(13), vbNullString), VBA.Chr$(10), vbNullString)
