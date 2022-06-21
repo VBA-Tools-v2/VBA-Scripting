@@ -499,7 +499,7 @@ Private Function txtstr_RemoveBOM(ByRef Bytes() As Byte) As Byte()
 End Function
 
 ''
-' Split file bytes into lines, looking for vbNewLine/vbCrLf (Chr(13) + Chr(10)).
+' Split file bytes into lines, looking for vbCr(Chr(13)), vbLf(Chr(10)), or vbNewLine/vbCrLf(Chr(13) + Chr(10)).
 '
 ' @method txtstr_BytesToLineBytes
 ' @param {Byte} | All bytes in opened file.
@@ -523,15 +523,43 @@ Private Sub txtstr_BytesToLineBytes(ByRef FileBytes() As Byte, ByRef LineBytes()
             txt_LineBytes(txt_ByteNo - txt_LineBreakStampNo) = FileBytes(txt_ByteNo)
             Select Case This.Format
             Case Tristate.TristateFalse ' ASCII
-                If FileBytes(txt_ByteNo - 1) = 13 And FileBytes(txt_ByteNo) = 10 Then
-                    txt_LineBreakStampNo = txt_ByteNo
-                    bytes_SaveLine txt_LineBytes, LineBytes, txt_LineNo
-                End If
-            Case Tristate.TristateTrue ' Unicode.
-                If txt_ByteNo > 3 Then
-                    If FileBytes(txt_ByteNo - 3) = 13 And FileBytes(txt_ByteNo - 2) = 0 And FileBytes(txt_ByteNo - 1) = 10 And FileBytes(txt_ByteNo) = 0 Then
+                Select Case FileBytes(txt_ByteNo)
+                Case 13 ' Possibly a carriage return(CR)(13) by itself, but need to check next character to see if it is a CR LF(13+10).
+                    If txt_ByteNo < UBound(FileBytes) Then
+                        ' Not end of file, check next character for line feed(LF)(10). If it is this, then skip (next loop will save line).
+                        If Not FileBytes(txt_ByteNo + 1) = 10 Then
+                            txt_LineBreakStampNo = txt_ByteNo
+                            bytes_SaveLine txt_LineBytes, LineBytes, txt_LineNo ' Next character is not a line feed, save this line with carriage return as the new line character.
+                        End If
+                    Else
+                        ' End of file, must be a carriage return by itself. Save line.
                         txt_LineBreakStampNo = txt_ByteNo
                         bytes_SaveLine txt_LineBytes, LineBytes, txt_LineNo
+                    End If
+                Case 10 ' Either a line feed(LF)(10) or both carriage return and line feed(CR LF)(13+10). Save line.
+                    txt_LineBreakStampNo = txt_ByteNo
+                    bytes_SaveLine txt_LineBytes, LineBytes, txt_LineNo
+                End Select
+            Case Tristate.TristateTrue ' Unicode.
+                If txt_ByteNo > 3 Then
+                    If FileBytes(txt_ByteNo) = 0 Then
+                        Select Case FileBytes(txt_ByteNo - 1)
+                        Case 13 ' Possibly a carriage return(CR)(13) by itself, but need to check next character to see if it is a CR LF(13+10).
+                        If txt_ByteNo < UBound(FileBytes) Then
+                            ' Not end of file, check next character for line feed(LF)(10). If it is this, then skip (next loop will save line).
+                            If Not FileBytes(txt_ByteNo + 1) = 10 Then
+                                txt_LineBreakStampNo = txt_ByteNo
+                                bytes_SaveLine txt_LineBytes, LineBytes, txt_LineNo ' Next character is not a line feed, save this line with carriage return as the new line character.
+                            End If
+                        Else
+                            ' End of file, must be a carriage return by itself. Save line.
+                            txt_LineBreakStampNo = txt_ByteNo
+                            bytes_SaveLine txt_LineBytes, LineBytes, txt_LineNo
+                        End If
+                        Case 10 ' Either a line feed(LF)(10) or both carriage return and line feed(CR LF)(13+10). Save line.
+                            txt_LineBreakStampNo = txt_ByteNo
+                            bytes_SaveLine txt_LineBytes, LineBytes, txt_LineNo
+                        End Select
                     End If
                 End If
             End Select
