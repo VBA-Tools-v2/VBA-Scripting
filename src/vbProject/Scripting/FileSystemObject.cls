@@ -268,12 +268,9 @@ End Function
 ''
 Public Sub DeleteFile(ByVal FileSpec As String, Optional ByVal Force As Boolean = False)
 #If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
-    ' Skip if Force = False and file is read-only.
-    If Not Force And (VBA.GetAttr(FileSpec) And vbReadOnly) > 0 Then
-        Exit Sub
-    End If
-    
-    VBA.Kill FileSpec
+    If Not Force And (VBA.GetAttr(FileSpec) And vbReadOnly) > 0 Then Exit Sub           ' Skip if Force = False and file is read-only.
+    If (VBA.GetAttr(FileSpec) And vbReadOnly) > 0 Then VBA.SetAttr FileSpec, vbNormal   ' Remove read-only if necessary.
+    VBA.Kill FileSpec                                                                   ' Delete file.
 #Else
     This.FileSystemObject.DeleteFile FileSpec, Force
 #End If
