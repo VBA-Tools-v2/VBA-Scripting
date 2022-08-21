@@ -160,56 +160,6 @@ Public Sub CloseFile()
 End Sub
 
 ''
-' VBA-only method for TextStream, to provide for initialisation of file. Technically this should be
-' using an interface to expose certain methods only (and this method should be private), but at this
-' stage I don't want to add additional classes to achieve this.
-'
-' This method mimics `FileSystemObject.OpenTextFile`.
-'
-' @method OpenFile
-' @param {String} FilePath
-' @param {IOMode} Mode
-' @param {Tristate} Format
-''
-Public Sub OpenFile(ByVal FilePath As String, ByVal Mode As IOMode, ByVal Format As Tristate)
-#If Mac Or Not UseScriptingTextStreamIfAvailable Then
-    This.FileID = VBA.FreeFile
-    This.Mode = Mode
-    This.Format = Format
-    Select Case This.Mode
-    Case IOMode.ForAppending
-        Open FilePath For Binary Access Write As #This.FileID
-        Seek This.FileID, VBA.LOF(This.FileID) + 1
-    Case IOMode.ForWriting
-        Open FilePath For Output As #This.FileID: Close #This.FileID ' Open then close file, to erase current content.
-        Open FilePath For Binary Access Write As #This.FileID
-        ' Write BOM if Unicode format.
-        If This.Format = TristateTrue Then
-            Dim txt_BOM(0 To 1) As Byte
-            txt_BOM(0) = 255: txt_BOM(1) = 254
-            Put #This.FileID, , txt_BOM
-        End If
-    Case IOMode.ForReading
-        ' Read file contents to bytes.
-        Dim txt_Bytes() As Byte
-        Open FilePath For Binary Access Read As #This.FileID
-        If Not VBA.LOF(This.FileID) = 0 Then ReDim txt_Bytes(1 To VBA.LOF(This.FileID))
-        Get #This.FileID, 1, txt_Bytes
-        ' Split bytes into lines, removing BOM if Unicode format.
-        If This.Format = TristateTrue Then
-            txtstr_BytesToLineBytes txtstr_RemoveBOM(txt_Bytes), This.FileLines
-        Else
-            txtstr_BytesToLineBytes txt_Bytes, This.FileLines
-        End If
-    End Select
-#Else
-    Dim txtstr_FSO As Object
-    Set txtstr_FSO = CreateObject("Scripting.FileSystemObject")
-    Set This.TextStream = txtstr_FSO.OpenTextFile(FilePath, Mode, True, Format)
-#End If
-End Sub
-
-''
 ' VBA implementation of TextStream `Read` method.
 ' https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/read-method
 '
@@ -635,14 +585,63 @@ End Function
 ' Initialize & Terminate Methods
 ' ============================================= '
 
-Private Sub Class_Terminate()
-    Me.CloseFile
+''
+' VBA-only method for TextStream, to provide for initialisation of file. Technically this should be
+' using an interface to expose certain methods only (and this method should be private).
+'
+' @method Initialise
+' @param {String} FilePath
+' @param {IOMode} Mode
+' @param {Tristate} Format
+''
+Public Sub Initialise(ByVal FilePath As String, ByVal Mode As IOMode, ByVal Format As Tristate)
+#If Mac Or Not UseScriptingTextStreamIfAvailable Then
+    This.FileID = VBA.FreeFile
+    This.Mode = Mode
+    This.Format = Format
+    Select Case This.Mode
+    Case IOMode.ForAppending
+        Open FilePath For Binary Access Write As #This.FileID
+        Seek This.FileID, VBA.LOF(This.FileID) + 1
+    Case IOMode.ForWriting
+        Open FilePath For Output As #This.FileID: Close #This.FileID ' Open then close file, to erase current content.
+        Open FilePath For Binary Access Write As #This.FileID
+        ' Write BOM if Unicode format.
+        If This.Format = TristateTrue Then
+            Dim txt_BOM(0 To 1) As Byte
+            txt_BOM(0) = 255: txt_BOM(1) = 254
+            Put #This.FileID, , txt_BOM
+        End If
+    Case IOMode.ForReading
+        ' Read file contents to bytes.
+        Dim txt_Bytes() As Byte
+        Open FilePath For Binary Access Read As #This.FileID
+        If Not VBA.LOF(This.FileID) = 0 Then ReDim txt_Bytes(1 To VBA.LOF(This.FileID))
+        Get #This.FileID, 1, txt_Bytes
+        ' Split bytes into lines, removing BOM if Unicode format.
+        If This.Format = TristateTrue Then
+            txtstr_BytesToLineBytes txtstr_RemoveBOM(txt_Bytes), This.FileLines
+        Else
+            txtstr_BytesToLineBytes txt_Bytes, This.FileLines
+        End If
+    End Select
+#Else
+    Dim txtstr_FSO As Object
+    Set txtstr_FSO = CreateObject("Scripting.FileSystemObject")
+    Set This.TextStream = txtstr_FSO.OpenTextFile(FilePath, Mode, True, Format)
+#End If
 End Sub
 
-Private Sub Class_Initialize()
 #If Mac Or Not UseScriptingTextStreamIfAvailable Then
+
+Private Sub Class_Initialize()
     This.FileID = -1
     This.LineNo = 1
     This.ColumnNo = 1
+End Sub
+
 #End If
+
+Private Sub Class_Terminate()
+    Me.CloseFile
 End Sub

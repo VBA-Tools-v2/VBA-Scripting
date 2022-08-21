@@ -248,7 +248,7 @@ Public Function CreateTextFile(ByVal FileName As String, Optional ByVal Overwrit
     End If
     Dim fso_TextStream As TextStream
     Set fso_TextStream = New TextStream
-    fso_TextStream.OpenFile FileName, ForWriting, VBA.IIf(Unicode, TristateTrue, TristateFalse)
+    fso_TextStream.Initialise FileName, ForWriting, VBA.IIf(Unicode, TristateTrue, TristateFalse)
     Set CreateTextFile = fso_TextStream
 #Else
     Set CreateTextFile = This.FileSystemObject.CreateTextFile(FileName, Overwrite, Unicode)
@@ -586,7 +586,7 @@ Public Function OpenTextFile(ByVal FileName As String, Optional ByVal Mode As IO
     End If
     Dim fso_TextStream As TextStream
     Set fso_TextStream = New TextStream
-    fso_TextStream.OpenFile FileName, Mode, Format
+    fso_TextStream.Initialise FileName, Mode, Format
     Set OpenTextFile = fso_TextStream
 #Else
     Set OpenTextFile = This.FileSystemObject.OpenTextFile(FileName, Mode, Create, Format)
