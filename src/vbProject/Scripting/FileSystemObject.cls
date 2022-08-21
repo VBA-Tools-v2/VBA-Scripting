@@ -46,7 +46,7 @@ Option Explicit
 #If Not Mac And UseScriptingFileSystemObjectIfAvailable Then
 
 Private Type TFileSystemObject
-    FileSystemObject As Object
+    FileSystemObject As Object ' Scripting.FileSystemObject
 End Type
 
 Private This As TFileSystemObject

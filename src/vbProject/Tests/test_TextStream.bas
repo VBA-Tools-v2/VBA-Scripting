@@ -60,7 +60,6 @@ Private Sub unicode_Write()
     This.Assert.AreEqual test_Result.Expected, test_Result.Actual, "File contents do not match when writing Unicode bytes to file."
 End Sub
 
-
 ''
 ' Test that VBA TextStream writes the same bytes as Scripting TextStream when using ASCII (TristateFalse) format.
 '
@@ -138,7 +137,6 @@ Private Sub ascii_ReadChr()
     This.Assert.SequenceEquals test_Result.Expected, test_Result.Actual, "Reading contents by character produced differing results." & vbNewLine & _
                                                                          "NOTE: both 'Skip' and 'SkipLine' are used here, ensure these tests are passing in the first instance"
 End Sub
-
 
 ' --------------------------------------------- '
 ' Property Tests
@@ -585,5 +583,3 @@ Private Sub ModuleCleanup()
         Set .VbaFileSystem = Nothing
     End With
 End Sub
-
-
