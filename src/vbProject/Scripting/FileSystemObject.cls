@@ -154,31 +154,30 @@ End Function
 ''
 Public Sub CopyFile(ByVal Source As String, ByVal Destination As String, Optional ByVal Overwrite As Boolean = True)
 #If Mac Or Not UseScriptingFileSystemObjectIfAvailable Then
-    Dim fso_Source As String
     Dim fso_Destination As String
     
-    fso_Source = Source
-    fso_Destination = Destination
-    
-    If Not VBA.InStr(fso_Destination, ".") > 0 Then
-        ' Extract file name from source if a new file name has not been specified.
-        If VBA.InStrRev(fso_Source, "/") > 0 Then
-            fso_Source = VBA.Right$(fso_Source, VBA.Len(fso_Source) - VBA.InStrRev(fso_Source, "/"))
-        ElseIf VBA.InStrRev(fso_Source, "\") > 0 Then
-           fso_Source = VBA.Right$(fso_Source, VBA.Len(fso_Source) - VBA.InStrRev(fso_Source, "\"))
+    ' If `Source` contains wildcard characters, or `Destination` ends with a path separator, it is assumed that
+    ' `Destination` is an existing folder in which to copy matching files.
+    If VBA.InStr(Me.GetFileName(Source), "*") Or (VBA.Right$(Destination, 1) = "/" Or VBA.Right$(Destination, 1) = "\") Then
+        If Not Me.FolderExists(Destination) Then Err.Raise 76 ' Path not found.
+        If VBA.InStr(Me.GetFileName(Source), "*") Then
+            ' TODO - Recursively copy with wildcard.
         Else
-            Err.Raise 75, "CopyFile", "Path/file access error"
+            fso_Destination = Me.BuildPath(Destination, Me.GetFileName(Source)) ' Add file name to Destination.
         End If
-        ' Update destination to include original file name.
-        fso_Destination = BuildPath(fso_Destination, fso_Source)
+    Else
+        fso_Destination = Destination
     End If
     
-    If Not Overwrite Then
-        If FileExists(fso_Destination) Then Err.Raise 58, "CopyFile", "File already exists."
+    ' Non-wild card source, check if source file exists.
+    If Not Me.FileExists(Source) Then Err.Raise 53 ' File not found.
+    
+    If Me.FileExists(fso_Destination) Then
+        If Not Overwrite Then Err.Raise 58 ' File already exists.
+        Me.DeleteFile fso_Destination, True ' Delete existing file.
     End If
     
-    ' Copy file.
-    VBA.FileCopy Source, fso_Destination
+    VBA.FileCopy Source, fso_Destination ' Copy file.
 #Else
     This.FileSystemObject.CopyFile Source, Destination, Overwrite
 #End If
