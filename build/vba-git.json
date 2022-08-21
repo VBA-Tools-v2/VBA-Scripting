@@ -1,0 +1,55 @@
+{
+	"project": {
+		"name": "VBA-Scripting",
+		"target": "xlam",
+		"authors": "RadiusCore Ltd",
+		"version": "0.2.3",
+		"description": "Native VBA implementation of Microsoft Scripting Runtime (scrun.dll). Aims to provide Mac support for this library."
+	},
+	"components": {
+		"vba": true,
+		"ribbon": false,
+		"worksheet": false,
+		"customxml": false
+	},
+	"structure": {
+		"root": "..\\"
+		"src": "..\\src\\",
+		"build": "..\\build\\"
+	},
+	"references": {
+	},
+	"dependencies": {
+	},
+	"release": {
+		"readonly": false,
+		"hackdetection": false,
+		"vbatamper": false,
+		"obfuscate": {
+			"enabled": false,
+			"backup": true,
+			"noiselength": 50
+		},
+		"unviewable": {
+			"enabled": false,
+			"backup": true,
+			"type": 2,
+			"level": 4,
+			"clean": true,
+			"stamp": true,
+			"copyright": true,
+			"multilayer": true,
+			"codeshield": true,
+			"vbehidden": false
+		},
+		"customcompression": false,
+		"digitalsignature": {
+			"enabled": false,
+			"certname": ""
+		},
+		"encryption": {
+			"enabled": false,
+			"password": "VelvetSweatshop"
+		}
+	}
+}
