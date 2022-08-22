@@ -597,14 +597,14 @@ End Function
 ' Initialize & Terminate Methods
 ' ============================================= '
 
-Private Sub Class_Terminate()
 #If Not Mac And UseScriptingFileSystemObjectIfAvailable Then
+
+Private Sub Class_Terminate()
     Set This.FileSystemObject = Nothing
-#End If
 End Sub
 
 Private Sub Class_Initialize()
-#If Not Mac And UseScriptingFileSystemObjectIfAvailable Then
     Set This.FileSystemObject = CreateObject("Scripting.FileSystemObject")
-#End If
 End Sub
+
+#End If
