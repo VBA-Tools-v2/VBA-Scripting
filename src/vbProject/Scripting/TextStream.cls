@@ -27,15 +27,13 @@ Attribute VB_Exposed = False
 '' ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ '
 Option Explicit
 
-
 ' --------------------------------------------- '
 ' Windows API Headers
 ' --------------------------------------------- '
 
 #If Not Mac And Not UseScriptingTextStreamIfAvailable Then
 
-Private Declare PtrSafe Sub ByteCopyMemory Lib "kernel32" Alias "RtlMoveMemory" _
-    (Dest As Any, Source As Any, ByVal Count As Long)
+Private Declare PtrSafe Sub ByteCopyMemory Lib "kernel32" Alias "RtlMoveMemory" (Dest As Any, Source As Any, ByVal Count As Long)
 
 #End If
 
@@ -59,7 +57,7 @@ End Type
 #Else
 
 Private Type TTextStream
-    TextStream As Object
+    TextStream As Object ' Scripting.TextStream
 End Type
 
 #End If
@@ -158,56 +156,6 @@ Public Sub CloseFile()
     End If
 #Else
     If Not This.TextStream Is Nothing Then This.TextStream.Close
-#End If
-End Sub
-
-''
-' VBA-only method for TextStream, to provide for initialisation of file. Technically this should be
-' using an interface to expose certain methods only (and this method should be private), but at this
-' stage I don't want to add additional classes to achieve this.
-'
-' This method mimics `FileSystemObject.OpenTextFile`.
-'
-' @method OpenFile
-' @param {String} FilePath
-' @param {IOMode} Mode
-' @param {Tristate} Format
-''
-Public Sub OpenFile(ByVal FilePath As String, ByVal Mode As IOMode, ByVal Format As Tristate)
-#If Mac Or Not UseScriptingTextStreamIfAvailable Then
-    This.FileID = VBA.FreeFile
-    This.Mode = Mode
-    This.Format = Format
-    Select Case This.Mode
-    Case IOMode.ForAppending
-        Open FilePath For Binary Access Write As #This.FileID
-        Seek This.FileID, VBA.LOF(This.FileID) + 1
-    Case IOMode.ForWriting
-        Open FilePath For Output As #This.FileID: Close #This.FileID ' Open then close file, to erase current content.
-        Open FilePath For Binary Access Write As #This.FileID
-        ' Write BOM if Unicode format.
-        If This.Format = TristateTrue Then
-            Dim txt_BOM(0 To 1) As Byte
-            txt_BOM(0) = 255: txt_BOM(1) = 254
-            Put #This.FileID, , txt_BOM
-        End If
-    Case IOMode.ForReading
-        ' Read file contents to bytes.
-        Dim txt_Bytes() As Byte
-        Open FilePath For Binary Access Read As #This.FileID
-        If Not VBA.LOF(This.FileID) = 0 Then ReDim txt_Bytes(1 To VBA.LOF(This.FileID))
-        Get #This.FileID, 1, txt_Bytes
-        ' Split bytes into lines, removing BOM if Unicode format.
-        If This.Format = TristateTrue Then
-            txtstr_BytesToLineBytes txtstr_RemoveBOM(txt_Bytes), This.FileLines
-        Else
-            txtstr_BytesToLineBytes txt_Bytes, This.FileLines
-        End If
-    End Select
-#Else
-    Dim txtstr_FSO As Object
-    Set txtstr_FSO = CreateObject("Scripting.FileSystemObject")
-    Set This.TextStream = txtstr_FSO.OpenTextFile(FilePath, Mode, True, Format)
 #End If
 End Sub
 
@@ -545,17 +493,17 @@ Private Sub txtstr_BytesToLineBytes(ByRef FileBytes() As Byte, ByRef LineBytes()
                     If FileBytes(txt_ByteNo) = 0 Then
                         Select Case FileBytes(txt_ByteNo - 1)
                         Case 13 ' Possibly a carriage return(CR)(13) by itself, but need to check next character to see if it is a CR LF(13+10).
-                        If txt_ByteNo < UBound(FileBytes) Then
-                            ' Not end of file, check next character for line feed(LF)(10). If it is this, then skip (next loop will save line).
-                            If Not FileBytes(txt_ByteNo + 1) = 10 Then
+                            If txt_ByteNo < UBound(FileBytes) Then
+                                ' Not end of file, check next character for line feed(LF)(10). If it is this, then skip (next loop will save line).
+                                If Not FileBytes(txt_ByteNo + 1) = 10 Then
+                                    txt_LineBreakStampNo = txt_ByteNo
+                                    bytes_SaveLine txt_LineBytes, LineBytes, txt_LineNo ' Next character is not a line feed, save this line with carriage return as the new line character.
+                                End If
+                            Else
+                                ' End of file, must be a carriage return by itself. Save line.
                                 txt_LineBreakStampNo = txt_ByteNo
-                                bytes_SaveLine txt_LineBytes, LineBytes, txt_LineNo ' Next character is not a line feed, save this line with carriage return as the new line character.
+                                bytes_SaveLine txt_LineBytes, LineBytes, txt_LineNo
                             End If
-                        Else
-                            ' End of file, must be a carriage return by itself. Save line.
-                            txt_LineBreakStampNo = txt_ByteNo
-                            bytes_SaveLine txt_LineBytes, LineBytes, txt_LineNo
-                        End If
                         Case 10 ' Either a line feed(LF)(10) or both carriage return and line feed(CR LF)(13+10). Save line.
                             txt_LineBreakStampNo = txt_ByteNo
                             bytes_SaveLine txt_LineBytes, LineBytes, txt_LineNo
@@ -598,14 +546,11 @@ Private Function txtstr_ByteArrayToString(ByRef Bytes() As Byte) As String
 
     Select Case This.Format
     Case Tristate.TristateFalse ' ASCII
-        txtstr_ByteArrayToString = VBA.StrConv(Bytes, vbUnicode)
+        txtstr_ByteArrayToString = VBA.StrConv(Bytes, vbUnicode)                    ' Convert using VBA.
     Case Tristate.TristateTrue ' Unicode
-        ' Account for terminating null
-        If (txt_Length Mod 2) Then txt_Length = txt_Length - 1
-        ' Set up a buffer to recieve the string.
-        txtstr_ByteArrayToString = VBA.String$(txt_Length / 2, 0)
-        ' Copy to string.
-        ByteCopyMemory ByVal StrPtr(txtstr_ByteArrayToString), Bytes(1), txt_Length
+        If (txt_Length Mod 2) Then txt_Length = txt_Length - 1                      ' Account for terminating null
+        txtstr_ByteArrayToString = VBA.String$(txt_Length / 2, 0)                   ' Set up a buffer to recieve the string.
+        ByteCopyMemory ByVal StrPtr(txtstr_ByteArrayToString), Bytes(1), txt_Length ' Copy to string.
     End Select
 End Function
 
@@ -623,14 +568,12 @@ Private Function txtstr_StringToByteArray(ByVal Text As String) As Byte()
     
     Select Case This.Format
     Case Tristate.TristateFalse ' ASCII
-        txt_Bytes = VBA.StrConv(Text, vbFromUnicode)
+        txt_Bytes = VBA.StrConv(Text, vbFromUnicode)                ' Convert using VBA.
     Case Tristate.TristateTrue ' Unicode
-        ' Number of bytes.
-        txt_Length = VBA.LenB(Text)
-        If txt_Length = 0 Then Exit Function
-        ReDim txt_Bytes(txt_Length - 1)
-        ' Copy characters from string to byte array.
-        ByteCopyMemory txt_Bytes(0), ByVal StrPtr(Text), txt_Length
+        txt_Length = VBA.LenB(Text)                                 ' Number of bytes.
+        If txt_Length = 0 Then Exit Function                        ' Exit if empty.
+        ReDim txt_Bytes(txt_Length - 1)                             ' Set up a buffer to recieve bytes.
+        ByteCopyMemory txt_Bytes(0), ByVal StrPtr(Text), txt_Length ' Copy characters from string to byte array.
     End Select
     
     txtstr_StringToByteArray = txt_Bytes
@@ -642,14 +585,63 @@ End Function
 ' Initialize & Terminate Methods
 ' ============================================= '
 
-Private Sub Class_Terminate()
-    Me.CloseFile
+''
+' VBA-only method for TextStream, to provide for initialisation of file. Technically this should be
+' using an interface to expose certain methods only (and this method should be private).
+'
+' @method Initialise
+' @param {String} FilePath
+' @param {IOMode} Mode
+' @param {Tristate} Format
+''
+Public Sub Initialise(ByVal FilePath As String, ByVal Mode As IOMode, ByVal Format As Tristate)
+#If Mac Or Not UseScriptingTextStreamIfAvailable Then
+    This.FileID = VBA.FreeFile
+    This.Mode = Mode
+    This.Format = Format
+    Select Case This.Mode
+    Case IOMode.ForAppending
+        Open FilePath For Binary Access Write As #This.FileID
+        Seek This.FileID, VBA.LOF(This.FileID) + 1
+    Case IOMode.ForWriting
+        Open FilePath For Output As #This.FileID: Close #This.FileID ' Open then close file, to erase current content.
+        Open FilePath For Binary Access Write As #This.FileID
+        ' Write BOM if Unicode format.
+        If This.Format = TristateTrue Then
+            Dim txt_BOM(0 To 1) As Byte
+            txt_BOM(0) = 255: txt_BOM(1) = 254
+            Put #This.FileID, , txt_BOM
+        End If
+    Case IOMode.ForReading
+        ' Read file contents to bytes.
+        Dim txt_Bytes() As Byte
+        Open FilePath For Binary Access Read As #This.FileID
+        If Not VBA.LOF(This.FileID) = 0 Then ReDim txt_Bytes(1 To VBA.LOF(This.FileID))
+        Get #This.FileID, 1, txt_Bytes
+        ' Split bytes into lines, removing BOM if Unicode format.
+        If This.Format = TristateTrue Then
+            txtstr_BytesToLineBytes txtstr_RemoveBOM(txt_Bytes), This.FileLines
+        Else
+            txtstr_BytesToLineBytes txt_Bytes, This.FileLines
+        End If
+    End Select
+#Else
+    Dim txtstr_FSO As Object
+    Set txtstr_FSO = CreateObject("Scripting.FileSystemObject")
+    Set This.TextStream = txtstr_FSO.OpenTextFile(FilePath, Mode, True, Format)
+#End If
 End Sub
 
-Private Sub Class_Initialize()
 #If Mac Or Not UseScriptingTextStreamIfAvailable Then
+
+Private Sub Class_Initialize()
     This.FileID = -1
     This.LineNo = 1
     This.ColumnNo = 1
+End Sub
+
 #End If
+
+Private Sub Class_Terminate()
+    Me.CloseFile
 End Sub

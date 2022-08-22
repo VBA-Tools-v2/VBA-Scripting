@@ -319,6 +319,7 @@ End Sub
 Private Sub GetFileName_MultiplePeriodsNoExtension()
     This.Assert.AreEqual This.ScrFileSystem.GetFileName("C:\v1.0.0"), This.VbaFileSystem.GetFileName("C:\v1.0.0")
 End Sub
+
 ' --------------------------------------------- '
 ' Speed Tests
 ' --------------------------------------------- '
