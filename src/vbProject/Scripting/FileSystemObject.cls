@@ -217,11 +217,17 @@ Public Sub CreateFolder(ByVal FolderName As String)
     If FolderName = vbNullString Then Err.Raise 5, , "Invalid procedure call or argument"
     If Me.FolderExists(FolderName) Then Err.Raise 58, , "File already exists."
     
+	Dim fso_FolderName as string
+	
+    ' Strip path separator from end of `FolderName`, if exists.
+    fso_FolderName = FolderName
+	If VBA.Right$(FolderName, 1) = "/" Or VBA.Right$(FolderName, 1) = "\" Then fso_FolderName = Me.GetParentFolderName(FolderName)
+    
     ' Recursively create the parent folder (if it doesn't already exist).
-    If Not Me.FolderExists(Me.GetParentFolderName(FolderName)) Then Me.CreateFolder Me.GetParentFolderName(FolderName)
+    If Not Me.FolderExists(Me.GetParentFolderName(fso_FolderName)) Then Me.CreateFolder Me.GetParentFolderName(fso_FolderName)
     
     ' Create folder target folder.
-    VBA.MkDir FolderName
+    VBA.MkDir fso_FolderName
 #Else
     ' Recursively create the parent folder (if it doesn't already exist).
     If Not Me.FolderExists(Me.GetParentFolderName(FolderName)) Then Me.CreateFolder Me.GetParentFolderName(FolderName)
@@ -597,14 +603,14 @@ End Function
 ' Initialize & Terminate Methods
 ' ============================================= '
 
-Private Sub Class_Terminate()
 #If Not Mac And UseScriptingFileSystemObjectIfAvailable Then
+
+Private Sub Class_Terminate()
     Set This.FileSystemObject = Nothing
-#End If
 End Sub
 
 Private Sub Class_Initialize()
-#If Not Mac And UseScriptingFileSystemObjectIfAvailable Then
     Set This.FileSystemObject = CreateObject("Scripting.FileSystemObject")
-#End If
 End Sub
+
+#End If
