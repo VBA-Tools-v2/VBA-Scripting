@@ -31,10 +31,10 @@ Option Explicit
 ' Windows API Headers
 ' --------------------------------------------- '
 
-#If Not Mac Then
-    Private Declare PtrSafe Function ByteCopyMemory Lib "libc.dylib" Alias "memmove" (ByRef Dest As Any, ByRef Source As Any, ByVal Count As Long) As LongPtr
+#If Mac Then
+    Private Declare PtrSafe Function ByteCopyMemory Lib "/usr/lib/libc++.dylib" Alias "memmove" (ByRef Dest As Any, ByRef Source As Any, ByVal Length As Long) As LongPtr
 #ElseIf Not UseScriptingTextStreamIfAvailable Then
-    Private Declare PtrSafe Sub ByteCopyMemory Lib "kernel32" Alias "RtlMoveMemory" (Dest As Any, Source As Any, ByVal Count As Long)
+    Private Declare PtrSafe Sub ByteCopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByRef Dest As Any, ByRef Source As Any, ByVal Length As Long)
 #End If
 
 ' --------------------------------------------- '
