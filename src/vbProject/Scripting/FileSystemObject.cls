@@ -194,12 +194,14 @@ End Sub
 ' @param {String} Destination | Character string destination where the folder and subfolders from source are to be copied. Wildcard characters are not allowed.
 ' @param {Boolean} Overwrite | Optional. Boolean value that indicates if existing folders are to be overwritten. If True, files are overwritten; if False, they are not. The default is True.
 ''
+#If Not Mac Then
 Public Sub CopyFolder(ByVal Source As String, ByVal Destination As String, Optional ByVal Overwrite As Boolean = True)
     ' TEMP
     Dim fso_Object As Object
     Set fso_Object = CreateObject("Scripting.FileSystemObject")
     fso_Object.CopyFolder Source, Destination, Overwrite
 End Sub
+#End If
 
 ''
 ' VBA implementation of FileSystemObject `CreateFolder` method.
@@ -455,12 +457,14 @@ End Function
 ' @param {String} FileSpec | The path (absolute or relative) to a specific file.
 ' @return {File}
 ''
+#If Not Mac Then
 Public Function GetFile(ByVal FileSpec As String) As Object
     ' TEMP - Need to build `File` class for native implementation.
     Dim fso_Object As Object
     Set fso_Object = CreateObject("Scripting.FileSystemObject")
     Set GetFile = fso_Object.GetFile(FileSpec)
 End Function
+#End If
 
 ''
 ' VBA implementation of FileSystemObject `GetFileName` method.
@@ -524,12 +528,14 @@ End Function
 ' @param {String} FolderSpec | The folderspec is the path (absolute or relative) to a specific folder.
 ' @return {String}
 ''
+#If Not Mac Then
 Public Function GetFolder(ByVal FolderSpec As String) As Object
     ' TEMP - Need to build `Folder` class for native implementation.
     Dim fso_Object As Object
     Set fso_Object = CreateObject("Scripting.FileSystemObject")
     Set GetFolder = fso_Object.GetFolder(FolderSpec)
 End Function
+#End If
 
 ''
 ' VBA implementation of FileSystemObject `GetParentFolderName` method.
